@@ -1,9 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/useUIStore';
 import { useVaultStore } from '@/stores/useVaultStore';
 import * as api from '@/lib/api';
-import { useEffect } from 'react';
 import { TitleBar } from './TitleBar';
 import { Sidebar } from './Sidebar';
 import { ItemList } from './ItemList';
@@ -16,12 +15,13 @@ export function AppShell() {
   const refreshProjects = useVaultStore((s) => s.refreshProjects);
 
   useEffect(() => {
-    refreshProjects();
+    // Only fetch if not already loaded (e.g. after page reload)
+    if (useVaultStore.getState().projects.length === 0) {
+      refreshProjects();
+    }
 
     // Listen for vault changes from the main process
-    const unsubscribe = api.onVaultChanged(() => {
-      refreshProjects();
-    });
+    const unsubscribe = api.onVaultChanged(() => refreshProjects());
 
     return unsubscribe;
   }, [refreshProjects]);
@@ -45,7 +45,7 @@ export function AppShell() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="h-screen flex flex-col bg-vault-bg"
+      className="h-screen flex flex-col bg-vault-bg overflow-hidden"
     >
       <TitleBar />
 

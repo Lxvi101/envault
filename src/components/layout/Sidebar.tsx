@@ -20,7 +20,6 @@ import { useUIStore } from '@/stores/useUIStore';
 import { useVaultStore } from '@/stores/useVaultStore';
 import { useSearchStore } from '@/stores/useSearchStore';
 import { useAuthStore } from '@/stores/useAuthStore';
-import { sidebarItemVariants } from '@/components/motion/variants';
 import type { ProjectCategory } from '@/types/vault';
 import { CATEGORY_LABELS } from '@/types/vault';
 
@@ -52,40 +51,43 @@ interface SidebarNavItemProps {
   count: number;
   isActive: boolean;
   onClick: () => void;
-  layoutId: string;
 }
 
-function SidebarNavItem({ icon: Icon, label, count, isActive, onClick, layoutId: _layoutId }: SidebarNavItemProps) {
+function SidebarNavItem({ icon: Icon, label, count, isActive, onClick }: SidebarNavItemProps) {
   return (
-    <motion.button
-      variants={sidebarItemVariants}
+    <button
       onClick={onClick}
       className={clsx(
-        'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-sm',
-        'transition-colors duration-150 relative',
-        isActive ? 'text-vault-text' : 'text-vault-muted hover:text-vault-text hover:bg-vault-raised/50',
+        'w-full flex items-center gap-2.5 text-sm relative group',
+        'transition-colors duration-150',
+        'rounded-lg overflow-hidden',
+        isActive
+          ? 'bg-vault-accent/10 text-vault-text border-l-2 border-vault-accent pl-[10px] pr-3 py-1.5'
+          : 'border-l-2 border-transparent pl-[10px] pr-3 py-1.5 text-vault-muted hover:text-vault-text hover:bg-vault-raised/50',
       )}
     >
-      {isActive && (
-        <motion.div
-          layoutId="sidebar-active"
-          className="absolute inset-0 rounded-lg bg-vault-accent/10 border border-vault-accent/20"
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        />
-      )}
-      <Icon size={16} className={clsx('relative z-10 shrink-0', isActive && 'text-vault-accent')} />
-      <span className="relative z-10 truncate flex-1 text-left">{label}</span>
+      <Icon
+        size={15}
+        strokeWidth={1.75}
+        className={clsx(
+          'shrink-0 transition-colors duration-150',
+          isActive ? 'text-vault-accent' : 'text-vault-muted/60 group-hover:text-vault-muted',
+        )}
+      />
+      <span className="truncate flex-1 text-left text-[13px]">{label}</span>
       {count > 0 && (
         <span
           className={clsx(
-            'relative z-10 text-[11px] tabular-nums px-1.5 py-0.5 rounded-md min-w-[20px] text-center',
-            isActive ? 'text-vault-accent bg-vault-accent/10' : 'text-vault-muted/70 bg-vault-bg/50',
+            'text-[11px] tabular-nums px-1.5 py-0.5 rounded-md min-w-[20px] text-center font-medium',
+            isActive
+              ? 'text-vault-accent bg-vault-accent/15'
+              : 'text-vault-muted/50 bg-vault-bg/60',
           )}
         >
           {count}
         </span>
       )}
-    </motion.button>
+    </button>
   );
 }
 
@@ -118,29 +120,29 @@ export function Sidebar() {
       style={{ width: sidebarWidth }}
       className={clsx(
         'h-full flex flex-col shrink-0 select-none',
-        'bg-vault-surface/40 backdrop-blur-md',
-        'border-r border-vault-border/50',
+        'bg-vault-surface/50',
+        'border-r border-vault-border/40',
       )}
     >
-      {/* Quick search button */}
-      <div className="p-3 pb-2">
+      {/* Search button */}
+      <div className="px-3 pt-3 pb-2 shrink-0">
         <button
           onClick={openSearch}
           className={clsx(
-            'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm',
-            'bg-vault-bg/60 text-vault-muted',
-            'border border-vault-border/50',
-            'hover:border-vault-border hover:text-vault-text',
+            'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm',
+            'bg-vault-bg/60 text-vault-muted/70',
+            'border border-vault-border/40',
+            'hover:border-vault-border/70 hover:text-vault-muted',
             'transition-all duration-150',
           )}
         >
-          <Search size={14} />
-          <span className="flex-1 text-left">Search...</span>
+          <Search size={13} strokeWidth={1.75} className="shrink-0" />
+          <span className="flex-1 text-left text-[12px]">Search...</span>
           <kbd
             className={clsx(
-              'text-[10px] px-1.5 py-0.5 rounded',
-              'bg-vault-raised text-vault-muted/60',
-              'border border-vault-border/60',
+              'text-[10px] px-1.5 py-0.5 rounded font-medium',
+              'bg-vault-raised/80 text-vault-muted/50',
+              'border border-vault-border/50',
             )}
           >
             {'\u2318'}K
@@ -149,7 +151,7 @@ export function Sidebar() {
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 overflow-y-auto px-2 space-y-0.5 scrollbar-none">
+      <nav className="flex-1 overflow-y-auto px-2 pb-2 space-y-0.5 scrollbar-none">
         {/* All Items */}
         <SidebarNavItem
           icon={Layers}
@@ -157,7 +159,6 @@ export function Sidebar() {
           count={projects.length}
           isActive={activeView === 'all'}
           onClick={() => setActiveView('all')}
-          layoutId="sidebar-all"
         />
 
         {/* Favorites */}
@@ -167,23 +168,20 @@ export function Sidebar() {
           count={favoritesCount}
           isActive={activeView === 'favorites'}
           onClick={() => setActiveView('favorites')}
-          layoutId="sidebar-favorites"
         />
 
-        {/* Separator */}
+        {/* Divider + Vaults label */}
         {activeCategories.length > 0 && (
-          <div className="py-2">
-            <div className="h-px bg-vault-border/40 mx-1" />
-          </div>
-        )}
-
-        {/* Categories header */}
-        {activeCategories.length > 0 && (
-          <div className="px-3 pt-1 pb-1.5">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-vault-muted/50">
-              Categories
-            </span>
-          </div>
+          <>
+            <div className="py-2.5 px-1">
+              <div className="h-px bg-vault-border/30" />
+            </div>
+            <div className="px-3 pb-1">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-vault-muted/40">
+                Vaults
+              </span>
+            </div>
+          </>
         )}
 
         {/* Category items */}
@@ -195,33 +193,33 @@ export function Sidebar() {
             count={categoryCounts[category] ?? 0}
             isActive={activeView === category}
             onClick={() => setActiveView(category)}
-            layoutId={`sidebar-${category}`}
           />
         ))}
       </nav>
 
       {/* Bottom controls */}
-      <div className="p-2 border-t border-vault-border/30 flex items-center gap-1">
-        <button
+      <div className="px-2 py-2 border-t border-vault-border/30 flex items-center gap-1 shrink-0">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
           onClick={lock}
           className={clsx(
-            'flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm flex-1',
-            'text-vault-muted hover:text-vault-text hover:bg-vault-raised/50',
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg text-[13px] flex-1',
+            'text-vault-muted/60 hover:text-vault-text hover:bg-vault-raised/50',
             'transition-colors duration-150',
           )}
         >
-          <Lock size={14} />
-          <span>Lock</span>
-        </button>
+          <Lock size={13} strokeWidth={1.75} />
+          <span>Lock Vault</span>
+        </motion.button>
         <button
           className={clsx(
             'p-1.5 rounded-lg',
-            'text-vault-muted hover:text-vault-text hover:bg-vault-raised/50',
+            'text-vault-muted/40 hover:text-vault-text hover:bg-vault-raised/50',
             'transition-colors duration-150',
           )}
           title="Settings"
         >
-          <Settings size={14} />
+          <Settings size={14} strokeWidth={1.75} />
         </button>
       </div>
     </div>

@@ -51,9 +51,13 @@ export async function setup(password: string): Promise<{ success: boolean }> {
 
 // ── Projects ───────────────────────────────────────────────────────────────
 
+type IpcResult<T> = { success: boolean; data?: T; error?: string };
+
 export async function getAllProjects(): Promise<VaultProject[]> {
   try {
-    return await getApi().getAllProjects();
+    const result = (await getApi().getAllProjects() as unknown) as IpcResult<VaultProject[]>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to get projects');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to fetch projects: ${errorMessage(err)}`);
   }
@@ -61,7 +65,9 @@ export async function getAllProjects(): Promise<VaultProject[]> {
 
 export async function createProject(data: Partial<VaultProject>): Promise<VaultProject> {
   try {
-    return await getApi().createProject(data);
+    const result = (await getApi().createProject(data) as unknown) as IpcResult<VaultProject>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to create project');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to create project: ${errorMessage(err)}`);
   }
@@ -72,7 +78,9 @@ export async function updateProject(
   data: Partial<VaultProject>,
 ): Promise<VaultProject> {
   try {
-    return await getApi().updateProject(id, data);
+    const result = (await getApi().updateProject(id, data) as unknown) as IpcResult<VaultProject>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to update project');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to update project: ${errorMessage(err)}`);
   }
@@ -80,7 +88,8 @@ export async function updateProject(
 
 export async function deleteProject(id: string): Promise<void> {
   try {
-    await getApi().deleteProject(id);
+    const result = (await getApi().deleteProject(id) as unknown) as IpcResult<never>;
+    if (!result.success) throw new Error(result.error ?? 'Failed to delete project');
   } catch (err) {
     throw new Error(`Failed to delete project: ${errorMessage(err)}`);
   }
@@ -88,7 +97,9 @@ export async function deleteProject(id: string): Promise<void> {
 
 export async function toggleFavorite(id: string): Promise<VaultProject> {
   try {
-    return await getApi().toggleFavorite(id);
+    const result = (await getApi().toggleFavorite(id) as unknown) as IpcResult<VaultProject>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to toggle favorite');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to toggle favorite: ${errorMessage(err)}`);
   }
@@ -102,7 +113,9 @@ export async function addVariable(
   variable: Partial<EnvVariable>,
 ): Promise<EnvVariable> {
   try {
-    return await getApi().addVariable(projectId, envId, variable);
+    const result = (await getApi().addVariable(projectId, envId, variable) as unknown) as IpcResult<EnvVariable>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to add variable');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to add variable: ${errorMessage(err)}`);
   }
@@ -115,7 +128,9 @@ export async function updateVariable(
   data: Partial<EnvVariable>,
 ): Promise<EnvVariable> {
   try {
-    return await getApi().updateVariable(projectId, envId, varId, data);
+    const result = (await getApi().updateVariable(projectId, envId, varId, data) as unknown) as IpcResult<EnvVariable>;
+    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to update variable');
+    return result.data;
   } catch (err) {
     throw new Error(`Failed to update variable: ${errorMessage(err)}`);
   }
@@ -127,7 +142,8 @@ export async function deleteVariable(
   varId: string,
 ): Promise<void> {
   try {
-    await getApi().deleteVariable(projectId, envId, varId);
+    const result = (await getApi().deleteVariable(projectId, envId, varId) as unknown) as IpcResult<never>;
+    if (!result.success) throw new Error(result.error ?? 'Failed to delete variable');
   } catch (err) {
     throw new Error(`Failed to delete variable: ${errorMessage(err)}`);
   }

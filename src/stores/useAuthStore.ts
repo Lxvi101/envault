@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import * as api from "../lib/api";
 import { useVaultStore } from "./useVaultStore";
+import type { VaultProject } from "../types/vault";
 
 interface AuthState {
   isLocked: boolean;
@@ -79,6 +80,11 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const result = await api.setup(password);
       if (result.success) {
+        // Populate vault store with demo projects from setup
+        const vault = (result as any);
+        if (vault.projects) {
+          useVaultStore.getState().setProjects(vault.projects as VaultProject[]);
+        }
         set({ isFirstRun: false, isLocked: false, isLoading: false, error: null });
         return true;
       } else {
