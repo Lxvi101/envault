@@ -1,0 +1,57 @@
+appId: com.envault.app
+productName: EnVault
+copyright: Copyright © 2026 EnVault
+
+directories:
+  buildResources: build
+  output: release
+
+files:
+  - dist-electron
+  - dist
+
+mac:
+  category: public.app-category.developer-tools
+  icon: build/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  artifactName: ${name}-${version}-${arch}.${ext}
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+linux:
+  icon: build/icon.png
+  category: Development
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64
+
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  artifactName: ${name}-${version}-setup.${ext}
