@@ -9,6 +9,14 @@ export default defineConfig({
     electron({
       main: {
         entry: 'electron/main.ts',
+        vite: {
+          build: {
+            rollupOptions: {
+              // chokidar pulls optional native fsevents; bundling it makes Rollup choke on .node binaries
+              external: ['chokidar'],
+            },
+          },
+        },
       },
       preload: {
         input: 'electron/preload.ts',
