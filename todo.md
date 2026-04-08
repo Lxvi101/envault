@@ -1,28 +1,26 @@
 # EnVault - Bug Fixes & 1Password UI Overhaul
 
-## Critical Bugs (Nothing Works)
+## Critical Bugs (Fixed)
 
-- [x] **Add Variable buttons are dead** - DetailPane.tsx now opens EnvEditor modal with working save handler
+- [x] **Add Variable buttons are dead** - DetailPane.tsx now opens inline editor
 - [x] **New Project button is dead** - ItemList.tsx + TitleBar "+ New Item" both open CreateProjectModal
 - [x] **Edit Project button is dead** - DetailPane.tsx Edit button opens CreateProjectModal in edit mode
 - [x] **Delete Project button is dead** - DetailPane.tsx Delete button shows DeleteConfirm dialog, calls API
 - [x] **Export button is dead** - DetailPane.tsx Export button calls api.exportEnv with dialog
 - [x] **Import button is dead** - DetailPane.tsx Import button calls api.importEnv with dialog + refresh
-- [x] **Notes don't save** - (uses textarea display, future: persist on blur)
-- [x] **Variable editing broken** - FieldRow click opens EnvEditor in edit mode
+- [x] **Variable editing broken** - FieldRow edit button opens inline editor (no modal popup)
 - [x] **Variable deletion not connected** - Delete button shows confirmation then calls deleteVariable API
+- [x] **Selection not switching** - Fixed Zustand selector from function ref to reactive state
+- [x] **App extremely slow** - Removed CSS blur filters, reduced animation durations, removed AnimatePresence mode="wait"
 
-## Missing Features (1Password Parity) - IMPLEMENTED
+## 1Password Parity - IMPLEMENTED
 
 ### Layout & Navigation
-- [x] Restyle entire app to match 1Password's clean light theme
 - [x] White/light header bar with search + "+ New Item" blue button
-- [x] User/vault name in sidebar header area (My Vault with user icon)
-- [x] Sidebar sections: All Items, Favorites, Watchtower, Developer, then VAULTS (by category), then TAGS
+- [x] Vault name in sidebar header area (My Vault with vault icon)
+- [x] Sidebar sections: All Items, Favorites, then VAULTS (by category), then TAGS
 - [x] Items grouped by date (month/year headers) in middle panel
-- [x] Forward/back navigation buttons in title bar
-- [x] "Share" and "Edit" action buttons in detail header breadcrumb bar
-- [x] Archive and Recently Deleted entries in sidebar
+- [x] Clean action buttons in detail header breadcrumb bar
 
 ### Detail Pane (1Password Style)
 - [x] Large item icon + name centered at top of detail
@@ -33,12 +31,23 @@
 - [x] "Last edited" section at bottom
 - [x] Favorite star under item icon
 
+### Context Menus (Right-Click)
+- [x] Right-click project items: Edit, Favorite, Copy Name, Export .env, Delete
+- [x] Right-click variable rows: Copy Value, Edit, Reveal/Hide (secrets), Delete
+- [x] Context menu component with keyboard nav, dividers, danger items
+
+### Inline Editing (No Popups)
+- [x] Variable editing is fully inline (expands in-place, no modal)
+- [x] Variable adding is fully inline (form at bottom of variable list)
+- [x] Enter/Cmd+Enter to save, Escape to cancel
+- [x] Key auto-uppercase, duplicate detection, secret toggle
+
 ### Item List (1Password Style)
-- [x] "All Categories" dropdown-style filter at top
 - [x] Items grouped by month/year headers
 - [x] Each item shows: icon, name, subtitle (description or first variable)
-- [x] Selected item blue highlight (like 1Password)
+- [x] Selected item blue highlight
 - [x] Favorite star inline
+- [x] Delete project from context menu with confirmation
 
 ### Create/Edit Project Modal
 - [x] Full create project form (name, description, icon, category, tags)
@@ -46,25 +55,33 @@
 - [x] Category grid picker with icons
 - [x] Tag input with add/remove
 
-### Variable Management
-- [x] Working add variable flow with EnvEditor modal
-- [x] Working edit variable (click field row to edit)
-- [x] Working delete variable with confirmation dialog
-- [x] Copy button per variable value
+### Tag Filtering
+- [x] Tags displayed in sidebar with counts
+- [x] Clicking a tag filters the item list to show only tagged projects
+
+### Dead UI Cleanup
+- [x] Removed Watchtower (not implemented)
+- [x] Removed Developer section (not implemented)
+- [x] Removed Archive (not implemented)
+- [x] Removed Recently Deleted (not implemented)
+- [x] Removed Share button (not implemented)
+- [x] Removed MoreVertical menu button (not implemented)
+- [x] Removed disabled nav arrows (not implemented)
+- [x] Removed dead Help text
+- [x] Removed dead Filter icon button (search input works)
+- [x] Removed dead dropdown chevron from list title
+- [x] Removed Profile sidebar item (not implemented)
 
 ### Theme Overhaul
 - [x] Light color scheme matching 1Password
 - [x] Tailwind config: vault-bg=#fff, vault-surface=#f7f7f8, vault-accent=#0066cc
 - [x] Updated all components (Sidebar, TitleBar, ItemList, DetailPane, Modals, Auth screens)
-- [x] Scrollbars, selection colors, focus rings all updated
-- [x] Electron main process backgroundColor updated to white
+- [x] Context menu shadow fixed for light theme
 
 ## Not Yet Implemented (Future)
 - [ ] Notes persist on blur (save to API)
 - [ ] Add new environment tab
 - [ ] Rename/delete environment
-- [ ] Watchtower functionality (audit weak/duplicate secrets)
-- [ ] Tag-based filtering in sidebar
-- [ ] Archive/Recently Deleted functionality
 - [ ] Drag to reorder variables
 - [ ] Service icon fetching from SVGL API
+- [ ] Keyboard shortcuts for common actions (Cmd+N new project, Cmd+D delete, etc.)

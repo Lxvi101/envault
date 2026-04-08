@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   Lock,
   Minus,
   Square,
   X,
-  ChevronLeft,
-  ChevronRight,
   Search,
   Plus,
 } from 'lucide-react';
@@ -67,22 +64,6 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
         </span>
       </div>
 
-      {/* Nav arrows */}
-      <div
-        className="flex items-center gap-0.5 px-2 shrink-0"
-        style={{
-          // @ts-expect-error -- webkit non-standard property
-          WebkitAppRegion: 'no-drag',
-        }}
-      >
-        <button className="p-1 rounded text-vault-muted/40 cursor-default" disabled>
-          <ChevronLeft size={16} strokeWidth={2} />
-        </button>
-        <button className="p-1 rounded text-vault-muted/40 cursor-default" disabled>
-          <ChevronRight size={16} strokeWidth={2} />
-        </button>
-      </div>
-
       {/* Search bar - centered */}
       <div
         className="flex-1 flex justify-center px-4"
@@ -116,24 +97,19 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
           WebkitAppRegion: 'no-drag',
         }}
       >
-        {/* Help link */}
-        <span className="text-[13px] text-vault-accent font-medium px-2 cursor-default">Help</span>
-
         {/* New Item button */}
         {!isLocked && onNewItem && (
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          <button
             onClick={onNewItem}
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium',
               'bg-vault-accent text-white hover:bg-vault-accent-hover',
-              'transition-colors shadow-sm',
+              'transition-colors shadow-sm active:scale-[0.98]',
             )}
           >
             <Plus size={14} strokeWidth={2.5} />
             New Item
-          </motion.button>
+          </button>
         )}
 
         {/* Lock button */}
@@ -141,7 +117,7 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
           <button
             onClick={handleLock}
             className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors ml-1"
-            title="Lock vault (⌘L)"
+            title="Lock vault"
           >
             <Lock size={15} strokeWidth={1.75} />
           </button>

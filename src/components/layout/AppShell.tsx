@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { useUIStore } from '@/stores/useUIStore';
 import { useVaultStore } from '@/stores/useVaultStore';
 import * as api from '@/lib/api';
@@ -53,18 +52,13 @@ export function AppShell() {
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="h-screen flex flex-col bg-white overflow-hidden"
-    >
+    <div className="h-screen flex flex-col bg-white overflow-hidden animate-fade-in">
       <TitleBar onNewItem={handleNewProject} />
 
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />
         <ResizeHandle onResize={handleSidebarResize} />
-        <ItemList onNewProject={handleNewProject} />
+        <ItemList onNewProject={handleNewProject} onEditProject={handleEditProject} />
         <ResizeHandle onResize={handleListResize} />
         <DetailPane onEditProject={handleEditProject} />
       </div>
@@ -80,6 +74,6 @@ export function AppShell() {
         }}
         existingProject={editingProject}
       />
-    </motion.div>
+    </div>
   );
 }

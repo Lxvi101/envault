@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect } from 'react';
+import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import {
   Shield,
   Copy,
@@ -13,17 +13,15 @@ import {
   Upload,
   Plus,
   FolderOpen,
-  ChevronDown,
-  Share2,
-  MoreVertical,
   KeyRound,
+  X,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVaultStore } from '@/stores/useVaultStore';
 import { useToastStore } from '@/stores/useToastStore';
 import * as apiLib from '@/lib/api';
 import { FadeIn } from '@/components/motion/FadeIn';
-import { EnvEditor } from '@/components/vault/EnvEditor';
+import { ContextMenu, type ContextMenuItem } from '@/components/shared/ContextMenu';
 import { DeleteConfirm } from '@/components/vault/DeleteConfirm';
 import type { VaultProject, Environment, EnvVariable } from '@/types/vault';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types/vault';
@@ -48,15 +46,157 @@ function EmptyDetailState() {
   );
 }
 
+// ─── Inline variable editor ─────────────────────────────────────────────────
+
+interface InlineEditorProps {
+  initial?: EnvVariable | null;
+  existingKeys: string[];
+  onSave: (data: Partial<EnvVariable>) => void;
+  onCancel: () => void;
+  autoFocus?: boolean;
+}
+
+function InlineEditor({ initial, existingKeys, onSave, onCancel, autoFocus = true }: InlineEditorProps) {
+  const [key, setKey] = useState(initial?.key ?? '');
+  const [value, setValue] = useState(initial?.value ?? '');
+  const [description, setDescription] = useState(initial?.description ?? '');
+  const [isSecret, setIsSecret] = useState(initial?.isSecret ?? false);
+  const [showValue, setShowValue] = useState(!initial?.isSecret);
+  const [error, setError] = useState('');
+  const keyRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (autoFocus) {
+      setTimeout(() => keyRef.current?.focus(), 50);
+    }
+  }, [autoFocus]);
+
+  const handleSave = useCallback(() => {
+    const trimmedKey = key.trim().toUpperCase();
+    if (!trimmedKey) {
+      setError('Key is required');
+      return;
+    }
+    // Check for duplicates (skip self)
+    const isDuplicate = existingKeys.some(
+      (k) => k.toUpperCase() === trimmedKey && (!initial || initial.key.toUpperCase() !== trimmedKey),
+    );
+    if (isDuplicate) {
+      setError('Duplicate key');
+      return;
+    }
+    onSave({ key: trimmedKey, value, description: description.trim(), isSecret });
+  }, [key, value, description, isSecret, existingKeys, initial, onSave]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        handleSave();
+      }
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onCancel();
+      }
+    },
+    [handleSave, onCancel],
+  );
+
+  return (
+    <div className="px-6 py-3 bg-vault-surface/50 border-b border-vault-border/60" onKeyDown={handleKeyDown}>
+      <div className="space-y-2">
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <input
+              ref={keyRef}
+              value={key}
+              onChange={(e) => {
+                setKey(e.target.value.toUpperCase().replace(/\s/g, '_'));
+                setError('');
+              }}
+              placeholder="KEY_NAME"
+              className={clsx(
+                'w-full px-3 py-2 rounded-lg border text-[13px] font-mono text-vault-accent placeholder:text-vault-muted/40 outline-none transition-all',
+                error
+                  ? 'border-vault-danger focus:shadow-[0_0_0_3px_rgba(255,59,48,0.1)]'
+                  : 'border-vault-border focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)]',
+              )}
+            />
+            {error && <p className="text-[11px] text-vault-danger mt-0.5">{error}</p>}
+          </div>
+          <div className="flex-[2] relative">
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              type={showValue ? 'text' : 'password'}
+              placeholder="value"
+              className="w-full px-3 py-2 pr-9 rounded-lg border border-vault-border text-[13px] font-mono text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
+            />
+            <button
+              type="button"
+              onClick={() => setShowValue(!showValue)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-vault-muted hover:text-vault-text transition-colors"
+              tabIndex={-1}
+            >
+              {showValue ? <EyeOff size={13} /> : <Eye size={13} />}
+            </button>
+          </div>
+        </div>
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Description (optional)"
+          className="w-full px-3 py-1.5 rounded-lg border border-vault-border text-[12px] text-vault-muted placeholder:text-vault-muted/40 outline-none focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
+        />
+        <div className="flex items-center justify-between">
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <div className="relative">
+              <input
+                type="checkbox"
+                checked={isSecret}
+                onChange={(e) => setIsSecret(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-8 h-[18px] rounded-full bg-vault-raised peer-checked:bg-vault-accent transition-colors" />
+              <div className="absolute top-[1px] left-[1px] w-4 h-4 rounded-full bg-white shadow-sm peer-checked:translate-x-[14px] transition-all" />
+            </div>
+            <span className="text-[12px] text-vault-muted">Secret</span>
+          </label>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onCancel}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[12px] text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
+            >
+              <X size={12} strokeWidth={2} />
+              Cancel
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-vault-accent text-white hover:bg-vault-accent-hover transition-colors"
+            >
+              <Check size={12} strokeWidth={2} />
+              {initial ? 'Save' : 'Add'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Field row (1Password style) ─────────────────────────────────────────────
 
 interface FieldRowProps {
   variable: EnvVariable;
   onEdit: (variable: EnvVariable) => void;
   onDelete: (variable: EnvVariable) => void;
+  isEditing: boolean;
+  existingKeys: string[];
+  onSave: (data: Partial<EnvVariable>) => void;
+  onCancelEdit: () => void;
 }
 
-function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
+function FieldRow({ variable, onEdit, onDelete, isEditing, existingKeys, onSave, onCancelEdit }: FieldRowProps) {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -76,68 +216,116 @@ function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [variable.value]);
 
-  return (
-    <div
-      className={clsx(
-        'group px-6 py-3 border-b border-vault-border/60 last:border-b-0',
-        'hover:bg-vault-surface/50 transition-colors duration-75 cursor-pointer',
-      )}
-      onClick={() => onEdit(variable)}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-medium text-vault-accent mb-0.5">
-            {variable.key.toLowerCase().replace(/_/g, ' ')}
-          </p>
-          <p
-            className={clsx(
-              'text-[14px] font-mono',
-              variable.isSecret && !revealed
-                ? 'text-vault-text/60 tracking-[0.2em]'
-                : 'text-vault-text',
-            )}
-          >
-            {displayValue}
-          </p>
-          {variable.description && (
-            <p className="text-[11px] text-vault-muted mt-0.5">{variable.description}</p>
-          )}
-        </div>
+  const contextMenuItems: ContextMenuItem[] = useMemo(() => [
+    {
+      type: 'item',
+      label: 'Copy Value',
+      icon: <Copy size={14} strokeWidth={1.75} />,
+      onClick: handleCopy,
+    },
+    {
+      type: 'item',
+      label: 'Edit',
+      icon: <Edit3 size={14} strokeWidth={1.75} />,
+      onClick: () => onEdit(variable),
+    },
+    ...(variable.isSecret
+      ? [{
+          type: 'item' as const,
+          label: revealed ? 'Hide Value' : 'Reveal Value',
+          icon: revealed ? <EyeOff size={14} strokeWidth={1.75} /> : <Eye size={14} strokeWidth={1.75} />,
+          onClick: () => setRevealed(!revealed),
+        }]
+      : []),
+    { type: 'divider' as const },
+    {
+      type: 'item' as const,
+      label: 'Delete',
+      icon: <Trash2 size={14} strokeWidth={1.75} />,
+      onClick: () => onDelete(variable),
+      danger: true,
+    },
+  ], [variable, revealed, handleCopy, onEdit, onDelete]);
 
-        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-75"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {variable.isSecret && (
-            <button
-              onClick={() => setRevealed(!revealed)}
-              className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
-              title={revealed ? 'Hide value' : 'Reveal value'}
+  if (isEditing) {
+    return (
+      <InlineEditor
+        initial={variable}
+        existingKeys={existingKeys}
+        onSave={onSave}
+        onCancel={onCancelEdit}
+      />
+    );
+  }
+
+  return (
+    <ContextMenu items={contextMenuItems}>
+      <div
+        className={clsx(
+          'group px-6 py-3 border-b border-vault-border/60 last:border-b-0',
+          'hover:bg-vault-surface/50 transition-colors duration-75',
+        )}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-[12px] font-medium text-vault-accent mb-0.5">
+              {variable.key.toLowerCase().replace(/_/g, ' ')}
+            </p>
+            <p
+              className={clsx(
+                'text-[14px] font-mono',
+                variable.isSecret && !revealed
+                  ? 'text-vault-text/60 tracking-[0.2em]'
+                  : 'text-vault-text',
+              )}
             >
-              {revealed ? <EyeOff size={14} strokeWidth={1.75} /> : <Eye size={14} strokeWidth={1.75} />}
-            </button>
-          )}
-          <button
-            onClick={handleCopy}
-            className={clsx(
-              'p-1.5 rounded-lg transition-colors',
-              copied
-                ? 'text-vault-success'
-                : 'text-vault-muted hover:text-vault-text hover:bg-vault-raised',
+              {displayValue}
+            </p>
+            {variable.description && (
+              <p className="text-[11px] text-vault-muted mt-0.5">{variable.description}</p>
             )}
-            title="Copy value"
-          >
-            {copied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.75} />}
-          </button>
-          <button
-            onClick={() => onDelete(variable)}
-            className="p-1.5 rounded-lg text-vault-muted hover:text-vault-danger hover:bg-vault-danger/10 transition-colors"
-            title="Delete variable"
-          >
-            <Trash2 size={14} strokeWidth={1.75} />
-          </button>
+          </div>
+
+          <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-75">
+            {variable.isSecret && (
+              <button
+                onClick={() => setRevealed(!revealed)}
+                className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
+                title={revealed ? 'Hide value' : 'Reveal value'}
+              >
+                {revealed ? <EyeOff size={14} strokeWidth={1.75} /> : <Eye size={14} strokeWidth={1.75} />}
+              </button>
+            )}
+            <button
+              onClick={handleCopy}
+              className={clsx(
+                'p-1.5 rounded-lg transition-colors',
+                copied
+                  ? 'text-vault-success'
+                  : 'text-vault-muted hover:text-vault-text hover:bg-vault-raised',
+              )}
+              title="Copy value"
+            >
+              {copied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.75} />}
+            </button>
+            <button
+              onClick={() => onEdit(variable)}
+              className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
+              title="Edit"
+            >
+              <Edit3 size={14} strokeWidth={1.75} />
+            </button>
+            <button
+              onClick={() => onDelete(variable)}
+              className="p-1.5 rounded-lg text-vault-muted hover:text-vault-danger hover:bg-vault-danger/10 transition-colors"
+              title="Delete"
+            >
+              <Trash2 size={14} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </ContextMenu>
   );
 }
 
@@ -150,19 +338,21 @@ interface EnvSectionProps {
 
 function EnvSection({ environments, projectId }: EnvSectionProps) {
   const [activeEnvId, setActiveEnvId] = useState<string>(environments[0]?.id ?? '');
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [editingVariable, setEditingVariable] = useState<EnvVariable | null>(null);
+  const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
+  const [isAdding, setIsAdding] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EnvVariable | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { addVariable, updateVariable, deleteVariable } = useVaultStore();
   const addToast = useToastStore((s) => s.addToast);
 
-  // Reset tab when project changes (different environments array reference)
+  // Reset tab when project changes
   useEffect(() => {
     if (environments.length > 0) {
       setActiveEnvId(environments[0].id);
     }
+    setEditingVariableId(null);
+    setIsAdding(false);
   }, [environments]);
 
   const activeEnv = useMemo(
@@ -175,32 +365,29 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
     [activeEnv],
   );
 
-  const handleAddVariable = useCallback(() => {
-    setEditingVariable(null);
-    setEditorOpen(true);
-  }, []);
-
   const handleEditVariable = useCallback((variable: EnvVariable) => {
-    setEditingVariable(variable);
-    setEditorOpen(true);
+    setEditingVariableId(variable.id);
+    setIsAdding(false);
   }, []);
 
   const handleSaveVariable = useCallback(
-    async (data: Partial<EnvVariable>) => {
+    async (variableId: string | null, data: Partial<EnvVariable>) => {
       if (!activeEnv) return;
       try {
-        if (editingVariable) {
-          await updateVariable(projectId, activeEnv.id, editingVariable.id, data);
+        if (variableId) {
+          await updateVariable(projectId, activeEnv.id, variableId, data);
           addToast('success', 'Variable updated');
         } else {
           await addVariable(projectId, activeEnv.id, data);
           addToast('success', 'Variable added');
         }
+        setEditingVariableId(null);
+        setIsAdding(false);
       } catch {
         addToast('error', 'Failed to save variable');
       }
     },
-    [activeEnv, editingVariable, projectId, addVariable, updateVariable, addToast],
+    [activeEnv, projectId, addVariable, updateVariable, addToast],
   );
 
   const handleDeleteVariable = useCallback(async () => {
@@ -272,6 +459,10 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
                     variable={variable}
                     onEdit={handleEditVariable}
                     onDelete={(v) => setDeleteTarget(v)}
+                    isEditing={editingVariableId === variable.id}
+                    existingKeys={existingKeys}
+                    onSave={(data) => handleSaveVariable(variable.id, data)}
+                    onCancelEdit={() => setEditingVariableId(null)}
                   />
                 ))}
               </div>
@@ -292,28 +483,47 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
                       variable={variable}
                       onEdit={handleEditVariable}
                       onDelete={(v) => setDeleteTarget(v)}
+                      isEditing={editingVariableId === variable.id}
+                      existingKeys={existingKeys}
+                      onSave={(data) => handleSaveVariable(variable.id, data)}
+                      onCancelEdit={() => setEditingVariableId(null)}
                     />
                   ))}
                 </div>
               </>
             )}
 
-            <div className="px-6 py-4">
-              <button
-                onClick={handleAddVariable}
-                className={clsx(
-                  'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
-                  'border border-dashed border-vault-border',
-                  'text-[13px] text-vault-muted hover:text-vault-accent',
-                  'hover:border-vault-accent/40 hover:bg-vault-accent/5',
-                  'transition-all duration-100',
-                )}
-              >
-                <Plus size={14} strokeWidth={2} />
-                Add Variable
-              </button>
-            </div>
+            {/* Inline add form */}
+            {isAdding ? (
+              <InlineEditor
+                existingKeys={existingKeys}
+                onSave={(data) => handleSaveVariable(null, data)}
+                onCancel={() => setIsAdding(false)}
+              />
+            ) : (
+              <div className="px-6 py-4">
+                <button
+                  onClick={() => { setIsAdding(true); setEditingVariableId(null); }}
+                  className={clsx(
+                    'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
+                    'border border-dashed border-vault-border',
+                    'text-[13px] text-vault-muted hover:text-vault-accent',
+                    'hover:border-vault-accent/40 hover:bg-vault-accent/5',
+                    'transition-all duration-100',
+                  )}
+                >
+                  <Plus size={14} strokeWidth={2} />
+                  Add Variable
+                </button>
+              </div>
+            )}
           </>
+        ) : isAdding ? (
+          <InlineEditor
+            existingKeys={existingKeys}
+            onSave={(data) => handleSaveVariable(null, data)}
+            onCancel={() => setIsAdding(false)}
+          />
         ) : (
           <div className="flex flex-col items-center justify-center py-16 px-6">
             <div className="w-12 h-12 rounded-xl bg-vault-surface border border-vault-border flex items-center justify-center mb-3">
@@ -321,7 +531,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
             </div>
             <p className="text-[13px] text-vault-muted mb-4">No variables yet</p>
             <button
-              onClick={handleAddVariable}
+              onClick={() => setIsAdding(true)}
               className={clsx(
                 'flex items-center gap-2 px-4 py-2 rounded-lg',
                 'bg-vault-accent text-white text-[13px] font-medium',
@@ -337,8 +547,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
         {/* Last edited section */}
         {activeEnv && (
           <div className="px-6 py-3 border-t border-vault-border/40">
-            <span className="flex items-center gap-1.5 text-[12px] text-vault-muted">
-              <ChevronDown size={14} strokeWidth={1.75} />
+            <span className="text-[12px] text-vault-muted">
               Last edited {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -349,18 +558,6 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
           </div>
         )}
       </div>
-
-      {/* EnvEditor modal */}
-      <EnvEditor
-        isOpen={editorOpen}
-        onClose={() => {
-          setEditorOpen(false);
-          setEditingVariable(null);
-        }}
-        onSave={handleSaveVariable}
-        existingVariable={editingVariable}
-        existingKeys={existingKeys}
-      />
 
       {/* Delete confirmation */}
       <DeleteConfirm
@@ -447,19 +644,12 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors">
-            <Share2 size={13} strokeWidth={1.75} />
-            Share
-          </button>
           <button
             onClick={onEdit}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
           >
             <Edit3 size={13} strokeWidth={1.75} />
             Edit
-          </button>
-          <button className="p-1 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors">
-            <MoreVertical size={15} strokeWidth={1.75} />
           </button>
         </div>
       </div>
@@ -574,11 +764,9 @@ interface DetailPaneProps {
 }
 
 export function DetailPane({ onEditProject }: DetailPaneProps) {
-  // Subscribe to the actual reactive values, not the function
   const selectedProjectId = useVaultStore((s) => s.selectedProjectId);
   const projects = useVaultStore((s) => s.projects);
 
-  // Derive the project inline from reactive state
   const project = useMemo(
     () => projects.find((p) => p.id === selectedProjectId),
     [projects, selectedProjectId],

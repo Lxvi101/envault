@@ -12,10 +12,12 @@ interface UIState {
   sidebarWidth: number;
   listWidth: number;
   activeCategory: ActiveCategory;
+  activeTag: string | null;
   sidebarCollapsed: boolean;
   setSidebarWidth: (width: number) => void;
   setListWidth: (width: number) => void;
   setActiveCategory: (category: ActiveCategory) => void;
+  setActiveTag: (tag: string | null) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
 }
@@ -61,6 +63,7 @@ export const useUIStore = create<UIState>((set, get) => ({
   sidebarWidth: persisted.sidebarWidth ?? DEFAULT_SIDEBAR_WIDTH,
   listWidth: persisted.listWidth ?? DEFAULT_LIST_WIDTH,
   activeCategory: (persisted.activeCategory as ActiveCategory) ?? "all",
+  activeTag: null,
   sidebarCollapsed: persisted.sidebarCollapsed ?? false,
 
   setSidebarWidth: (width) => {
@@ -74,8 +77,12 @@ export const useUIStore = create<UIState>((set, get) => ({
   },
 
   setActiveCategory: (category) => {
-    set({ activeCategory: category });
+    set({ activeCategory: category, activeTag: null });
     persistState({ ...get(), activeCategory: category });
+  },
+
+  setActiveTag: (tag) => {
+    set({ activeTag: tag });
   },
 
   toggleSidebar: () => {

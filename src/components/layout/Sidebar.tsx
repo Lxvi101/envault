@@ -13,10 +13,6 @@ import {
   Lock,
   Tag,
   Plus,
-  Archive,
-  Trash2,
-  User,
-  Shield,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useUIStore } from '@/stores/useUIStore';
@@ -112,7 +108,7 @@ function SectionHeader({ label, action }: { label: string; action?: () => void }
 }
 
 export function Sidebar() {
-  const { sidebarWidth, activeCategory: activeView, setActiveCategory: setActiveView } = useUIStore();
+  const { sidebarWidth, activeCategory: activeView, activeTag, setActiveCategory: setActiveView, setActiveTag } = useUIStore();
   const { projects } = useVaultStore();
   const { lock } = useAuthStore();
 
@@ -134,16 +130,22 @@ export function Sidebar() {
     [categoryCounts],
   );
 
-  // Collect unique tags
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
+  // Collect unique tags with counts
+  const tagCounts = useMemo(() => {
+    const counts = new Map<string, number>();
     for (const project of projects) {
       for (const tag of project.tags) {
-        tagSet.add(tag);
+        counts.set(tag, (counts.get(tag) ?? 0) + 1);
       }
     }
-    return Array.from(tagSet).sort();
+    return Array.from(counts.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 12);
   }, [projects]);
+
+  const handleTagClick = (tag: string) => {
+    setActiveTag(tag);
+  };
 
   return (
     <div
@@ -154,11 +156,11 @@ export function Sidebar() {
         'border-r border-vault-border',
       )}
     >
-      {/* User / Vault header */}
+      {/* Vault header */}
       <div className="px-3 pt-3 pb-1 shrink-0">
         <div className="flex items-center gap-2.5 px-2 py-1.5">
           <div className="w-8 h-8 rounded-full bg-vault-accent/10 flex items-center justify-center">
-            <User size={15} className="text-vault-accent" strokeWidth={1.75} />
+            <Layers size={15} className="text-vault-accent" strokeWidth={1.75} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-vault-text truncate">My Vault</p>
@@ -171,36 +173,18 @@ export function Sidebar() {
         {/* Core items */}
         <div className="space-y-0.5 pb-1">
           <SidebarNavItem
-            icon={User}
-            label="Profile"
-            isActive={false}
-            onClick={() => {}}
-          />
-          <SidebarNavItem
             icon={Layers}
             label="All Items"
             count={projects.length}
-            isActive={activeView === 'all'}
+            isActive={activeView === 'all' && !activeTag}
             onClick={() => setActiveView('all')}
           />
           <SidebarNavItem
             icon={Star}
             label="Favorites"
             count={favoritesCount}
-            isActive={activeView === 'favorites'}
+            isActive={activeView === 'favorites' && !activeTag}
             onClick={() => setActiveView('favorites')}
-          />
-          <SidebarNavItem
-            icon={Shield}
-            label="Watchtower"
-            isActive={false}
-            onClick={() => {}}
-          />
-          <SidebarNavItem
-            icon={Code}
-            label="Developer"
-            isActive={false}
-            onClick={() => {}}
           />
         </div>
 
@@ -215,7 +199,7 @@ export function Sidebar() {
                   icon={CATEGORY_ICONS[category]}
                   label={CATEGORY_LABELS[category]}
                   count={categoryCounts[category] ?? 0}
-                  isActive={activeView === category}
+                  isActive={activeView === category && !activeTag}
                   onClick={() => setActiveView(category)}
                 />
               ))}
@@ -224,39 +208,24 @@ export function Sidebar() {
         )}
 
         {/* Tags */}
-        {allTags.length > 0 && (
+        {tagCounts.length > 0 && (
           <>
             <SectionHeader label="Tags" />
             <div className="space-y-0.5">
-              {allTags.slice(0, 8).map((tag) => (
+              {tagCounts.map(([tag, count]) => (
                 <SidebarNavItem
                   key={tag}
                   icon={Tag}
                   label={tag}
-                  isActive={false}
-                  onClick={() => {}}
+                  count={count}
+                  isActive={activeTag === tag}
+                  onClick={() => handleTagClick(tag)}
                   indent
                 />
               ))}
             </div>
           </>
         )}
-
-        {/* Bottom items */}
-        <div className="pt-3 space-y-0.5">
-          <SidebarNavItem
-            icon={Archive}
-            label="Archive"
-            isActive={false}
-            onClick={() => {}}
-          />
-          <SidebarNavItem
-            icon={Trash2}
-            label="Recently Deleted"
-            isActive={false}
-            onClick={() => {}}
-          />
-        </div>
       </nav>
 
       {/* Bottom lock button */}
