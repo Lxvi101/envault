@@ -45,7 +45,6 @@ export function EnvEditor({
         setShowValue(true);
       }
       setError("");
-
       setTimeout(() => keyInputRef.current?.focus(), 100);
     }
   }, [isOpen, existingVariable]);
@@ -123,7 +122,7 @@ export function EnvEditor({
     >
       <div className="space-y-4" onKeyDown={handleKeyDown}>
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-vault-muted">
+          <label className="text-[12px] font-medium text-vault-muted">
             Key <span className="text-vault-danger">*</span>
           </label>
           <input
@@ -134,19 +133,19 @@ export function EnvEditor({
               setError("");
             }}
             placeholder="DATABASE_URL"
-            className={`w-full px-3 py-2.5 rounded-lg bg-vault-bg border text-sm font-mono text-cyan-400 placeholder:text-vault-muted/40 outline-none transition-all ${
+            className={`w-full px-3 py-2.5 rounded-lg border text-[14px] font-mono text-vault-accent placeholder:text-vault-muted/40 outline-none transition-all ${
               error
-                ? "border-vault-danger/60 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]"
-                : "border-vault-border focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)]"
+                ? "border-vault-danger focus:shadow-[0_0_0_3px_rgba(255,59,48,0.1)]"
+                : "border-vault-border focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)]"
             }`}
           />
           {error && (
-            <p className="text-xs text-vault-danger">{error}</p>
+            <p className="text-[12px] text-vault-danger">{error}</p>
           )}
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-vault-muted">
+          <label className="text-[12px] font-medium text-vault-muted">
             Value
           </label>
           <div className="relative">
@@ -155,7 +154,7 @@ export function EnvEditor({
               onChange={(e) => setValue(e.target.value)}
               type={showValue ? "text" : "password"}
               placeholder="postgres://user:pass@localhost:5432/db"
-              className="w-full px-3 py-2.5 pr-10 rounded-lg bg-vault-bg border border-vault-border text-sm font-mono text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+              className="w-full px-3 py-2.5 pr-10 rounded-lg border border-vault-border text-[14px] font-mono text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
             />
             <button
               type="button"
@@ -173,7 +172,7 @@ export function EnvEditor({
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-vault-muted">
+          <label className="text-[12px] font-medium text-vault-muted">
             Description
             <span className="text-vault-muted/50 ml-1">(optional)</span>
           </label>
@@ -181,11 +180,11 @@ export function EnvEditor({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Primary database connection string"
-            className="w-full px-3 py-2.5 rounded-lg bg-vault-bg border border-vault-border text-sm text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+            className="w-full px-3 py-2.5 rounded-lg border border-vault-border text-[14px] text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
           />
         </div>
 
-        <label className="flex items-center gap-3 px-3 py-3 rounded-lg bg-vault-bg border border-vault-border cursor-pointer hover:border-vault-border/80 transition-colors">
+        <label className="flex items-center gap-3 px-3 py-3 rounded-lg border border-vault-border cursor-pointer hover:bg-vault-surface transition-colors">
           <div className="relative">
             <input
               type="checkbox"
@@ -194,19 +193,19 @@ export function EnvEditor({
               className="sr-only peer"
             />
             <div className="w-9 h-5 rounded-full bg-vault-raised peer-checked:bg-vault-accent transition-colors" />
-            <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-vault-muted/80 peer-checked:bg-white peer-checked:translate-x-4 transition-all" />
+            <div className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow-sm peer-checked:translate-x-4 transition-all" />
           </div>
           <div>
-            <p className="text-sm text-vault-text">Mark as secret</p>
-            <p className="text-xs text-vault-muted">
+            <p className="text-[13px] text-vault-text font-medium">Mark as secret</p>
+            <p className="text-[12px] text-vault-muted">
               Secret values are hidden by default and cleared from clipboard
             </p>
           </div>
         </label>
 
-        <p className="text-[11px] text-vault-muted/50 text-right">
+        <p className="text-[11px] text-vault-muted text-right">
           Press{" "}
-          <kbd className="px-1.5 py-0.5 rounded bg-vault-raised text-vault-muted text-[10px] font-mono">
+          <kbd className="px-1.5 py-0.5 rounded bg-vault-surface text-vault-muted text-[10px] font-mono border border-vault-border">
             Cmd+Enter
           </kbd>{" "}
           to save

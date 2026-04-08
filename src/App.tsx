@@ -23,7 +23,7 @@ function App() {
   // Show nothing while initial auth check is loading
   if (isLoading && !isFirstRun && isLocked) {
     return (
-      <div className="h-screen w-screen bg-vault-bg flex items-center justify-center">
+      <div className="h-screen w-screen bg-white flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-vault-accent/30 border-t-vault-accent rounded-full animate-spin" />
       </div>
     );

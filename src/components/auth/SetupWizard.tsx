@@ -50,7 +50,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
       animate={{ opacity: 1, height: 'auto' }}
       className="space-y-1.5"
     >
-      <div className="h-1.5 bg-vault-bg rounded-full overflow-hidden">
+      <div className="h-1.5 bg-vault-raised rounded-full overflow-hidden">
         <motion.div
           className={clsx('h-full rounded-full', config.color)}
           initial={{ width: 0 }}
@@ -59,7 +59,7 @@ function PasswordStrengthBar({ password }: { password: string }) {
         />
       </div>
       <p className="text-xs text-vault-muted">
-        Password strength: <span className="text-vault-text">{config.label}</span>
+        Password strength: <span className="text-vault-text font-medium">{config.label}</span>
       </p>
     </motion.div>
   );
@@ -129,7 +129,7 @@ export function SetupWizard() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-vault-bg overflow-hidden"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white overflow-hidden"
     >
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden">
@@ -137,7 +137,7 @@ export function SetupWizard() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse at 40% 30%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 60% 70%, rgba(139,92,246,0.06) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 40% 30%, rgba(0,102,204,0.06) 0%, transparent 50%), radial-gradient(ellipse at 60% 70%, rgba(99,102,241,0.04) 0%, transparent 50%)',
           }}
           animate={{ opacity: [1, 0.7, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
@@ -152,7 +152,7 @@ export function SetupWizard() {
               top: orb.y,
               width: orb.size,
               height: orb.size,
-              background: 'radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(0,102,204,0.06) 0%, transparent 70%)',
               filter: 'blur(40px)',
             }}
             animate={{
@@ -169,15 +169,6 @@ export function SetupWizard() {
             }}
           />
         ))}
-
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-          }}
-        />
       </div>
 
       {/* Content */}
@@ -190,9 +181,9 @@ export function SetupWizard() {
         <div
           className={clsx(
             'rounded-2xl p-8',
-            'bg-vault-surface/60 backdrop-blur-xl',
-            'border border-vault-border/50',
-            'shadow-[0_0_80px_rgba(99,102,241,0.06)]',
+            'bg-white/80 backdrop-blur-xl',
+            'border border-vault-border',
+            'shadow-xl shadow-black/5',
           )}
         >
           {/* Step indicator */}
@@ -221,26 +212,14 @@ export function SetupWizard() {
                 animate="animate"
                 exit="exit"
               >
-                {/* Icon */}
                 <div className="flex justify-center mb-6">
-                  <motion.div
-                    animate={{
-                      filter: [
-                        'drop-shadow(0 0 20px rgba(99,102,241,0.3))',
-                        'drop-shadow(0 0 35px rgba(99,102,241,0.5))',
-                        'drop-shadow(0 0 20px rgba(99,102,241,0.3))',
-                      ],
-                    }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  >
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-vault-accent to-purple-600 flex items-center justify-center">
-                      <Shield size={32} className="text-white" />
-                    </div>
-                  </motion.div>
+                  <div className="w-16 h-16 rounded-2xl bg-vault-accent flex items-center justify-center shadow-lg shadow-vault-accent/20">
+                    <Shield size={32} className="text-white" />
+                  </div>
                 </div>
 
                 <h1 className="text-center mb-1">
-                  <span className="text-2xl font-bold bg-gradient-to-r from-vault-text via-vault-accent to-purple-400 bg-clip-text text-transparent">
+                  <span className="text-2xl font-bold text-vault-text">
                     Welcome to {APP_NAME}
                   </span>
                 </h1>
@@ -266,10 +245,9 @@ export function SetupWizard() {
                   onClick={() => setStep(2)}
                   className={clsx(
                     'w-full py-3 rounded-xl font-medium text-sm',
-                    'bg-gradient-to-r from-vault-accent to-purple-600',
-                    'text-white shadow-lg shadow-vault-accent/20',
-                    'transition-all duration-200',
-                    'hover:shadow-xl hover:shadow-vault-accent/30',
+                    'bg-vault-accent text-white',
+                    'shadow-lg shadow-vault-accent/20',
+                    'hover:bg-vault-accent-hover transition-colors',
                     'flex items-center justify-center gap-2',
                   )}
                 >
@@ -286,7 +264,7 @@ export function SetupWizard() {
                 exit="exit"
               >
                 <div className="flex justify-center mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-vault-raised flex items-center justify-center border border-vault-border">
+                  <div className="w-12 h-12 rounded-xl bg-vault-surface flex items-center justify-center border border-vault-border">
                     <Lock size={24} className="text-vault-accent" />
                   </div>
                 </div>
@@ -345,7 +323,7 @@ export function SetupWizard() {
                       onClick={() => setStep(1)}
                       className={clsx(
                         'px-4 py-3 rounded-xl font-medium text-sm',
-                        'bg-vault-raised text-vault-muted',
+                        'bg-vault-surface text-vault-muted',
                         'border border-vault-border',
                         'hover:text-vault-text transition-colors duration-150',
                       )}
@@ -360,10 +338,9 @@ export function SetupWizard() {
                       disabled={!isPasswordValid || !confirmPassword || isLoading}
                       className={clsx(
                         'flex-1 py-3 rounded-xl font-medium text-sm',
-                        'bg-gradient-to-r from-vault-accent to-purple-600',
-                        'text-white shadow-lg shadow-vault-accent/20',
-                        'transition-all duration-200',
-                        'hover:shadow-xl hover:shadow-vault-accent/30',
+                        'bg-vault-accent text-white',
+                        'shadow-lg shadow-vault-accent/20',
+                        'hover:bg-vault-accent-hover transition-colors',
                         'disabled:opacity-50 disabled:cursor-not-allowed',
                         'flex items-center justify-center gap-2',
                       )}
@@ -382,7 +359,7 @@ export function SetupWizard() {
                     </motion.button>
                   </div>
 
-                  <p className="text-xs text-vault-muted/60 text-center">
+                  <p className="text-xs text-vault-muted text-center">
                     Minimum {MIN_PASSWORD_LENGTH} characters required
                   </p>
                 </div>

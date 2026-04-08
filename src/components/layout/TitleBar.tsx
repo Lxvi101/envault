@@ -1,15 +1,29 @@
 import { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Cloud, Minus, Square, X, ShieldCheck } from 'lucide-react';
+import {
+  Lock,
+  Minus,
+  Square,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Search,
+  Plus,
+} from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '@/stores/useAuthStore';
+import { useSearchStore } from '@/stores/useSearchStore';
 import { APP_NAME } from '@/lib/constants';
 import * as api from '@/lib/api';
 
-export function TitleBar() {
+interface TitleBarProps {
+  onNewItem?: () => void;
+}
+
+export function TitleBar({ onNewItem }: TitleBarProps) {
   const { lock, isLocked } = useAuthStore();
+  const { open: openSearch } = useSearchStore();
   const [platform, setPlatform] = useState('darwin');
-  const [isSynced] = useState(true);
   const isMac = platform === 'darwin';
 
   useEffect(() => {
@@ -27,8 +41,8 @@ export function TitleBar() {
   return (
     <div
       className={clsx(
-        'h-11 flex items-center shrink-0 select-none',
-        'bg-vault-bg border-b border-vault-border/30',
+        'h-12 flex items-center shrink-0 select-none',
+        'bg-white border-b border-vault-border',
       )}
       style={{
         // @ts-expect-error -- webkit non-standard property
@@ -41,57 +55,95 @@ export function TitleBar() {
       {/* Non-macOS: left padding */}
       {!isMac && <div className="w-3 shrink-0" />}
 
-      {/* App name centered */}
-      <div className="flex-1 flex items-center justify-center gap-1.5">
-        <ShieldCheck
-          size={14}
-          className="text-vault-text/50 shrink-0"
-          strokeWidth={1.75}
-        />
-        <span className="text-[13px] font-medium text-vault-text/60 tracking-wide">
-          {APP_NAME}
-        </span>
-      </div>
-
-      {/* Right controls */}
-      <div
-        className="flex items-center gap-0.5 pr-2 shrink-0"
+      {/* App name */}
+      <div className="flex items-center gap-2 px-2 shrink-0"
         style={{
           // @ts-expect-error -- webkit non-standard property
           WebkitAppRegion: 'no-drag',
         }}
       >
-        {/* Sync indicator */}
-        {!isLocked && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4 }}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-md mr-1"
-            title={isSynced ? 'Vault synced' : 'Not synced'}
+        <span className="text-[14px] font-bold text-vault-text">
+          {APP_NAME}
+        </span>
+      </div>
+
+      {/* Nav arrows */}
+      <div
+        className="flex items-center gap-0.5 px-2 shrink-0"
+        style={{
+          // @ts-expect-error -- webkit non-standard property
+          WebkitAppRegion: 'no-drag',
+        }}
+      >
+        <button className="p-1 rounded text-vault-muted/40 cursor-default" disabled>
+          <ChevronLeft size={16} strokeWidth={2} />
+        </button>
+        <button className="p-1 rounded text-vault-muted/40 cursor-default" disabled>
+          <ChevronRight size={16} strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* Search bar - centered */}
+      <div
+        className="flex-1 flex justify-center px-4"
+        style={{
+          // @ts-expect-error -- webkit non-standard property
+          WebkitAppRegion: 'no-drag',
+        }}
+      >
+        <button
+          onClick={openSearch}
+          className={clsx(
+            'flex items-center gap-2 px-3 py-1.5 rounded-lg w-full max-w-md',
+            'bg-vault-surface border border-vault-border',
+            'text-vault-muted text-[13px]',
+            'hover:border-vault-accent/30 transition-colors',
+          )}
+        >
+          <Search size={14} strokeWidth={2} className="shrink-0 text-vault-muted" />
+          <span className="flex-1 text-left">Search in {APP_NAME}</span>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-vault-raised text-vault-muted font-medium border border-vault-border">
+            {'\u2318'}K
+          </kbd>
+        </button>
+      </div>
+
+      {/* Right controls */}
+      <div
+        className="flex items-center gap-1 pr-3 shrink-0"
+        style={{
+          // @ts-expect-error -- webkit non-standard property
+          WebkitAppRegion: 'no-drag',
+        }}
+      >
+        {/* Help link */}
+        <span className="text-[13px] text-vault-accent font-medium px-2 cursor-default">Help</span>
+
+        {/* New Item button */}
+        {!isLocked && onNewItem && (
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={onNewItem}
+            className={clsx(
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium',
+              'bg-vault-accent text-white hover:bg-vault-accent-hover',
+              'transition-colors shadow-sm',
+            )}
           >
-            <Cloud
-              size={13}
-              className={isSynced ? 'text-vault-success/50' : 'text-vault-muted/40'}
-              strokeWidth={1.75}
-            />
-            <span className="text-[11px] text-vault-muted/40 font-medium">
-              {isSynced ? 'Synced' : 'Local'}
-            </span>
-          </motion.div>
+            <Plus size={14} strokeWidth={2.5} />
+            New Item
+          </motion.button>
         )}
 
         {/* Lock button */}
         {!isLocked && (
           <button
             onClick={handleLock}
-            className={clsx(
-              'p-1.5 rounded-md transition-colors duration-150',
-              'text-vault-muted/50 hover:text-vault-text hover:bg-vault-raised/60',
-            )}
+            className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors ml-1"
             title="Lock vault (⌘L)"
           >
-            <Lock size={13} strokeWidth={1.75} />
+            <Lock size={15} strokeWidth={1.75} />
           </button>
         )}
 
@@ -100,19 +152,19 @@ export function TitleBar() {
           <div className="flex items-center ml-2 gap-0.5">
             <button
               onClick={handleMinimize}
-              className="p-1.5 rounded hover:bg-vault-raised/60 text-vault-muted/50 hover:text-vault-text transition-colors"
+              className="p-1.5 rounded hover:bg-vault-raised text-vault-muted hover:text-vault-text transition-colors"
             >
               <Minus size={13} strokeWidth={1.75} />
             </button>
             <button
               onClick={handleMaximize}
-              className="p-1.5 rounded hover:bg-vault-raised/60 text-vault-muted/50 hover:text-vault-text transition-colors"
+              className="p-1.5 rounded hover:bg-vault-raised text-vault-muted hover:text-vault-text transition-colors"
             >
               <Square size={11} strokeWidth={1.75} />
             </button>
             <button
               onClick={handleClose}
-              className="p-1.5 rounded hover:bg-vault-danger/70 text-vault-muted/50 hover:text-white transition-colors"
+              className="p-1.5 rounded hover:bg-vault-danger text-vault-muted hover:text-white transition-colors"
             >
               <X size={13} strokeWidth={1.75} />
             </button>

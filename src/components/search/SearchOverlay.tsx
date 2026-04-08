@@ -65,38 +65,34 @@ export function SearchOverlay() {
           animate="visible"
           exit="exit"
         >
-          {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={handleBackdropClick}
           />
 
-          {/* Search card */}
           <motion.div
             variants={cardVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-[640px] mx-4 rounded-2xl overflow-hidden bg-vault-surface/95 backdrop-blur-2xl backdrop-saturate-200 border border-vault-border/60 shadow-2xl shadow-black/50"
+            className="relative w-full max-w-[640px] mx-4 rounded-xl overflow-hidden bg-white border border-vault-border shadow-xl shadow-black/10"
           >
-            {/* Search input */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-vault-border/50">
+            <div className="flex items-center gap-3 px-5 py-4 border-b border-vault-border">
               <Search className="w-5 h-5 text-vault-muted flex-shrink-0" />
               <input
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search projects, variables, tags..."
-                className="flex-1 bg-transparent text-base text-vault-text placeholder:text-vault-muted/50 outline-none"
+                className="flex-1 bg-transparent text-base text-vault-text placeholder:text-vault-muted outline-none"
                 spellCheck={false}
                 autoComplete="off"
               />
-              <kbd className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-vault-raised border border-vault-border/50 text-[11px] text-vault-muted font-mono">
+              <kbd className="flex items-center gap-0.5 px-2 py-1 rounded-lg bg-vault-surface border border-vault-border text-[11px] text-vault-muted font-mono">
                 <span className="text-[10px]">Esc</span>
               </kbd>
             </div>
 
-            {/* Results */}
             <SearchResults
               projects={projects}
               query={query}

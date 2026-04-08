@@ -16,7 +16,7 @@ function FloatingOrb({ delay, x, y, size }: { delay: number; x: string; y: strin
         top: y,
         width: size,
         height: size,
-        background: `radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)`,
+        background: `radial-gradient(circle, rgba(0,102,204,0.06) 0%, transparent 70%)`,
         filter: 'blur(40px)',
       }}
       animate={{
@@ -76,7 +76,7 @@ export function LockScreen() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-vault-bg overflow-hidden"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-white overflow-hidden"
     >
       {/* Animated gradient background */}
       <div className="absolute inset-0 overflow-hidden">
@@ -84,28 +84,15 @@ export function LockScreen() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(139,92,246,0.06) 0%, transparent 50%)',
+              'radial-gradient(ellipse at 30% 20%, rgba(0,102,204,0.06) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(99,102,241,0.04) 0%, transparent 50%)',
           }}
-          animate={{
-            opacity: [1, 0.8, 1],
-          }}
+          animate={{ opacity: [1, 0.8, 1] }}
           transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
         />
 
-        {/* Floating orbs */}
         {orbs.map((orb, i) => (
           <FloatingOrb key={i} {...orb} />
         ))}
-
-        {/* Subtle grid overlay */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(99,102,241,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.5) 1px, transparent 1px)',
-            backgroundSize: '60px 60px',
-          }}
-        />
       </div>
 
       {/* Center card */}
@@ -118,33 +105,21 @@ export function LockScreen() {
         <div
           className={clsx(
             'rounded-2xl p-8',
-            'bg-vault-surface/60 backdrop-blur-xl',
-            'border border-vault-border/50',
-            'shadow-[0_0_80px_rgba(99,102,241,0.06)]',
+            'bg-white/80 backdrop-blur-xl',
+            'border border-vault-border',
+            'shadow-xl shadow-black/5',
           )}
         >
-          {/* Shield icon with glow */}
+          {/* Shield icon */}
           <div className="flex justify-center mb-6">
-            <motion.div
-              className="relative"
-              animate={{
-                filter: [
-                  'drop-shadow(0 0 20px rgba(99,102,241,0.3))',
-                  'drop-shadow(0 0 40px rgba(99,102,241,0.5))',
-                  'drop-shadow(0 0 20px rgba(99,102,241,0.3))',
-                ],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-            >
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-vault-accent to-purple-600 flex items-center justify-center">
-                <Shield size={32} className="text-white" />
-              </div>
-            </motion.div>
+            <div className="w-16 h-16 rounded-2xl bg-vault-accent flex items-center justify-center shadow-lg shadow-vault-accent/20">
+              <Shield size={32} className="text-white" />
+            </div>
           </div>
 
           {/* Title */}
           <h1 className="text-center mb-1">
-            <span className="text-2xl font-bold bg-gradient-to-r from-vault-text via-vault-accent to-purple-400 bg-clip-text text-transparent">
+            <span className="text-2xl font-bold text-vault-text">
               {APP_NAME}
             </span>
           </h1>
@@ -160,7 +135,6 @@ export function LockScreen() {
               disabled={isLoading}
             />
 
-            {/* Error message */}
             {error && (
               <motion.p
                 initial={{ opacity: 0, y: -5 }}
@@ -171,7 +145,6 @@ export function LockScreen() {
               </motion.p>
             )}
 
-            {/* Unlock button */}
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
@@ -179,12 +152,11 @@ export function LockScreen() {
               disabled={isLoading || !password}
               className={clsx(
                 'w-full py-3 rounded-xl font-medium text-sm',
-                'bg-gradient-to-r from-vault-accent to-purple-600',
-                'text-white shadow-lg shadow-vault-accent/20',
-                'transition-all duration-200',
-                'hover:shadow-xl hover:shadow-vault-accent/30',
-                'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg',
-                'focus:outline-none focus:ring-2 focus:ring-vault-accent/50 focus:ring-offset-2 focus:ring-offset-vault-bg',
+                'bg-vault-accent text-white',
+                'shadow-lg shadow-vault-accent/20',
+                'hover:bg-vault-accent-hover transition-colors',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'focus:outline-none focus:ring-2 focus:ring-vault-accent/50 focus:ring-offset-2',
               )}
             >
               {isLoading ? (
@@ -199,8 +171,7 @@ export function LockScreen() {
           </div>
         </div>
 
-        {/* Keyboard shortcut hint */}
-        <p className="text-center text-vault-muted/50 text-xs mt-4">
+        <p className="text-center text-vault-muted text-xs mt-4">
           Press Enter to unlock
         </p>
       </motion.div>

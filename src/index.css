@@ -19,8 +19,8 @@
     height: 100%;
     width: 100%;
     overflow: hidden;
-    background-color: #0a0a0f;
-    color: #e2e2f0;
+    background-color: #ffffff;
+    color: #1d1d1f;
     font-family:
       -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter",
       system-ui, -apple-system, sans-serif;
@@ -29,8 +29,8 @@
   }
 
   ::selection {
-    background-color: rgba(99, 102, 241, 0.3);
-    color: #e2e2f0;
+    background-color: rgba(0, 102, 204, 0.2);
+    color: #1d1d1f;
   }
 
   input,
@@ -41,11 +41,11 @@
 
   input::placeholder,
   textarea::placeholder {
-    color: rgba(226, 226, 240, 0.3);
+    color: #86868b;
   }
 
   :focus-visible {
-    outline: 2px solid rgba(99, 102, 241, 0.5);
+    outline: 2px solid rgba(0, 102, 204, 0.5);
     outline-offset: 2px;
     border-radius: 4px;
   }
@@ -63,17 +63,17 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.12);
     border-radius: 9999px;
     transition: background 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.2);
   }
 
   ::-webkit-scrollbar-thumb:active {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
   }
 
   ::-webkit-scrollbar-corner {
@@ -82,7 +82,7 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
   }
 
   .scrollbar-none::-webkit-scrollbar,
@@ -109,75 +109,8 @@
     width: 6px;
   }
   .scrollbar-on-hover:hover::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(0, 0, 0, 0.12);
     border-radius: 9999px;
-  }
-}
-
-/* ===== GLASS EFFECTS ===== */
-@layer components {
-  .glass {
-    background: rgba(15, 15, 25, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .glass-heavy {
-    background: rgba(10, 10, 18, 0.85);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow:
-      0 0 0 1px rgba(0, 0, 0, 0.3),
-      0 25px 50px -12px rgba(0, 0, 0, 0.6),
-      0 0 80px -20px rgba(99, 102, 241, 0.08);
-  }
-
-  .glass-sidebar {
-    background: rgba(12, 12, 20, 0.7);
-    backdrop-filter: blur(16px) saturate(1.1);
-    -webkit-backdrop-filter: blur(16px) saturate(1.1);
-    border-right: 1px solid rgba(255, 255, 255, 0.04);
-  }
-
-  .glass-card {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease;
-  }
-
-  .glass-card:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.08);
-  }
-
-  .glass-active {
-    background: rgba(99, 102, 241, 0.08);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-  }
-
-  .glass-input {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    transition:
-      background 0.2s ease,
-      border-color 0.2s ease,
-      box-shadow 0.2s ease;
-  }
-
-  .glass-input:focus {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgba(99, 102, 241, 0.4);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
   }
 }
 
@@ -192,53 +125,6 @@
   .app-no-drag {
     -webkit-app-region: no-drag;
   }
-
-  .vault-border {
-    border-color: rgba(255, 255, 255, 0.06);
-  }
-
-  .vault-border-light {
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .vault-surface {
-    background: rgba(255, 255, 255, 0.03);
-  }
-
-  .vault-surface-hover {
-    background: rgba(255, 255, 255, 0.06);
-  }
-
-  .vault-surface-active {
-    background: rgba(99, 102, 241, 0.12);
-  }
-
-  .vault-input {
-    @apply rounded-lg border bg-black/30 px-3 py-2 text-sm text-white/90 transition-colors;
-    border-color: rgba(255, 255, 255, 0.06);
-  }
-
-  .vault-input:focus {
-    border-color: rgba(99, 102, 241, 0.5);
-    background: rgba(0, 0, 0, 0.5);
-  }
-
-  .vault-btn-primary {
-    @apply rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all;
-  }
-  .vault-btn-primary:hover {
-    @apply bg-indigo-500;
-  }
-  .vault-btn-primary:active {
-    @apply bg-indigo-700;
-  }
-
-  .vault-btn-ghost {
-    @apply rounded-lg px-3 py-1.5 text-sm text-white/60 transition-all;
-  }
-  .vault-btn-ghost:hover {
-    @apply bg-white/5 text-white/80;
-  }
 }
 
 /* ===== ANIMATIONS ===== */
@@ -248,27 +134,9 @@
     100% { background-position: 200% 0; }
   }
   .animate-shimmer {
-    background: linear-gradient(90deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 100%);
+    background: linear-gradient(90deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.06) 50%, rgba(0,0,0,0.02) 100%);
     background-size: 200% 100%;
     animation: shimmer 2s ease-in-out infinite;
-  }
-
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 4px rgba(99,102,241,0.3), 0 0 12px rgba(99,102,241,0.1); }
-    50% { box-shadow: 0 0 8px rgba(99,102,241,0.5), 0 0 24px rgba(99,102,241,0.2); }
-  }
-  .animate-pulse-glow {
-    animation: pulse-glow 2.5s ease-in-out infinite;
-  }
-
-  @keyframes gradient-shift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .animate-gradient-shift {
-    background-size: 200% 200%;
-    animation: gradient-shift 6s ease infinite;
   }
 
   @keyframes fade-in {
@@ -293,22 +161,6 @@
   }
   .animate-scale-in {
     animation: scale-in 0.2s ease-out;
-  }
-
-  @keyframes vault-spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .animate-vault-spin {
-    animation: vault-spin 0.8s linear infinite;
-  }
-
-  @keyframes glow-ring {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 0.8; transform: scale(1.05); }
-  }
-  .animate-glow-ring {
-    animation: glow-ring 3s ease-in-out infinite;
   }
 
   @keyframes toast-in {

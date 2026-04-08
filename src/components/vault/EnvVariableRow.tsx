@@ -78,7 +78,7 @@ export function EnvVariableRow({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8, transition: { duration: 0.15 } }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      whileHover={{ backgroundColor: "rgba(26, 26, 38, 0.4)" }}
+      whileHover={{ backgroundColor: "rgba(0, 0, 0, 0.02)" }}
       className="group rounded-xl border border-transparent hover:border-vault-border/40 transition-colors"
     >
       <AnimatePresence mode="wait">
@@ -100,7 +100,7 @@ export function EnvVariableRow({
                 }
                 onKeyDown={handleKeyDown}
                 placeholder="KEY"
-                className="flex-1 px-3 py-2 rounded-lg bg-vault-bg border border-vault-border text-sm font-mono text-cyan-400 placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+                className="flex-1 px-3 py-2 rounded-lg bg-vault-bg border border-vault-border text-sm font-mono text-vault-accent placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
               />
               <span className="flex items-center text-vault-muted text-sm font-mono px-1">
                 =
@@ -110,7 +110,7 @@ export function EnvVariableRow({
                 onChange={(e) => setEditValue(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="value"
-                className="flex-[2] px-3 py-2 rounded-lg bg-vault-bg border border-vault-border text-sm font-mono text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+                className="flex-[2] px-3 py-2 rounded-lg bg-vault-bg border border-vault-border text-sm font-mono text-vault-text placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
               />
             </div>
             <input
@@ -118,7 +118,7 @@ export function EnvVariableRow({
               onChange={(e) => setEditDescription(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Description (optional)"
-              className="w-full px-3 py-1.5 rounded-lg bg-vault-bg border border-vault-border text-xs text-vault-muted placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.15)] transition-all"
+              className="w-full px-3 py-1.5 rounded-lg bg-vault-bg border border-vault-border text-xs text-vault-muted placeholder:text-vault-muted/40 outline-none focus:border-vault-accent/60 focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)] transition-all"
             />
             <div className="flex items-center justify-end gap-2">
               <button
@@ -144,7 +144,7 @@ export function EnvVariableRow({
             className="flex items-center gap-2 px-3 py-2.5"
           >
             <div className="flex-1 min-w-0 flex items-center gap-2">
-              <span className="font-mono text-sm text-cyan-400 font-medium flex-shrink-0">
+              <span className="font-mono text-sm text-vault-accent font-medium flex-shrink-0">
                 {variable.key}
               </span>
               <span className="text-vault-muted/40 font-mono text-sm">=</span>

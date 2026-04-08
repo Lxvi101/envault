@@ -66,7 +66,7 @@ function ToastItem({ toast }: { toast: ToastType }) {
       transition={{ type: "spring", stiffness: 400, damping: 30 }}
       className={clsx(
         "relative w-80 rounded-xl border overflow-hidden",
-        "bg-vault-surface shadow-xl shadow-black/30",
+        "bg-white shadow-xl shadow-black/10",
         colors.border
       )}
     >

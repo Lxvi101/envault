@@ -20,13 +20,13 @@ interface ButtonProps
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-vault-accent to-indigo-500 text-white shadow-lg shadow-vault-accent/20 hover:shadow-vault-accent/30",
+    "bg-vault-accent text-white hover:bg-vault-accent-hover shadow-sm",
   secondary:
-    "bg-vault-surface border border-vault-border text-vault-text hover:bg-vault-raised hover:border-vault-border/80",
+    "bg-white border border-vault-border text-vault-text hover:bg-vault-surface",
   danger:
-    "bg-vault-danger/10 border border-vault-danger/30 text-vault-danger hover:bg-vault-danger/20 hover:border-vault-danger/50",
+    "bg-vault-danger/10 border border-vault-danger/30 text-vault-danger hover:bg-vault-danger/20",
   ghost:
-    "bg-transparent text-vault-muted hover:text-vault-text hover:bg-vault-raised/60",
+    "bg-transparent text-vault-muted hover:text-vault-text hover:bg-vault-raised",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -56,12 +56,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <motion.button
         ref={ref}
-        whileHover={isDisabled ? undefined : { scale: 1.02 }}
+        whileHover={isDisabled ? undefined : { scale: 1.01 }}
         whileTap={isDisabled ? undefined : { scale: 0.98 }}
         transition={{ type: "spring", stiffness: 500, damping: 30 }}
         className={clsx(
-          "inline-flex items-center justify-center font-medium transition-all duration-200",
-          "focus:outline-none focus-visible:ring-2 focus-visible:ring-vault-accent/50 focus-visible:ring-offset-1 focus-visible:ring-offset-vault-bg",
+          "inline-flex items-center justify-center font-medium transition-all duration-150",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-vault-accent/50 focus-visible:ring-offset-1",
           variantStyles[variant],
           sizeStyles[size],
           fullWidth && "w-full",

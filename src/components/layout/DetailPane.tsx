@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Copy,
+  Check,
   Eye,
   EyeOff,
   Star,
-  Clock,
   Tag,
   Trash2,
   Edit3,
@@ -14,12 +14,19 @@ import {
   Upload,
   Plus,
   FolderOpen,
+  ChevronDown,
+  Share2,
+  MoreVertical,
+  KeyRound,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVaultStore } from '@/stores/useVaultStore';
+import { useToastStore } from '@/stores/useToastStore';
 import * as apiLib from '@/lib/api';
 import { pageVariants } from '@/components/motion/variants';
 import { FadeIn } from '@/components/motion/FadeIn';
+import { EnvEditor } from '@/components/vault/EnvEditor';
+import { DeleteConfirm } from '@/components/vault/DeleteConfirm';
 import type { VaultProject, Environment, EnvVariable } from '@/types/vault';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types/vault';
 
@@ -29,39 +36,37 @@ function EmptyDetailState() {
   return (
     <div className="flex-1 flex items-center justify-center h-full">
       <FadeIn className="text-center px-8">
-        <div className="w-16 h-16 rounded-2xl bg-vault-surface/40 border border-vault-border/25 flex items-center justify-center mx-auto mb-5">
-          <Shield size={28} className="text-vault-muted/25" strokeWidth={1.5} />
+        <div className="w-16 h-16 rounded-2xl bg-vault-surface border border-vault-border flex items-center justify-center mx-auto mb-5">
+          <Shield size={28} className="text-vault-muted/40" strokeWidth={1.5} />
         </div>
-        <p className="text-[14px] font-medium text-vault-muted/50 mb-1">
-          Select a project
+        <p className="text-[15px] font-medium text-vault-muted mb-1">
+          Select an item
         </p>
-        <p className="text-[12px] text-vault-muted/30">
-          Press{' '}
-          <kbd className="px-1.5 py-0.5 rounded bg-vault-raised/80 border border-vault-border/40 text-vault-muted/40 text-[10px] font-mono">
-            {'\u2318'}K
-          </kbd>{' '}
-          to search your vault
+        <p className="text-[13px] text-vault-muted/60">
+          Choose an item from the list to view its details
         </p>
       </FadeIn>
     </div>
   );
 }
 
-// ─── Variable row ─────────────────────────────────────────────────────────────
+// ─── Field row (1Password style) ─────────────────────────────────────────────
 
-interface VariableRowProps {
+interface FieldRowProps {
   variable: EnvVariable;
   projectId: string;
   envId: string;
+  onEdit: (variable: EnvVariable) => void;
+  onDelete: (variable: EnvVariable) => void;
 }
 
-function VariableRow({ variable }: VariableRowProps) {
+function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const displayValue = useMemo(() => {
     if (variable.isSecret && !revealed) {
-      return '\u2022'.repeat(Math.min(variable.value.length, 20));
+      return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
     }
     return variable.value;
   }, [variable.isSecret, variable.value, revealed]);
@@ -79,85 +84,90 @@ function VariableRow({ variable }: VariableRowProps) {
   }, [variable.value]);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={clsx(
-        'group flex items-center gap-3 px-4 py-2.5',
-        'hover:bg-vault-raised/25 transition-colors duration-100',
-        'border-b border-vault-border/12 last:border-b-0',
+        'group px-6 py-3 border-b border-vault-border/60 last:border-b-0',
+        'hover:bg-vault-surface/50 transition-colors duration-100 cursor-pointer',
       )}
+      onClick={() => onEdit(variable)}
     >
-      {/* Key */}
-      <div className="shrink-0" style={{ width: 180 }}>
-        <span className="text-[11px] font-mono text-vault-accent/80 truncate block">
-          {variable.key}
-        </span>
-        {variable.description && (
-          <span className="text-[10px] text-vault-muted/35 truncate block mt-0.5">
-            {variable.description}
-          </span>
-        )}
-      </div>
-
-      {/* Separator */}
-      <span className="text-vault-border/60 text-[11px] shrink-0">=</span>
-
-      {/* Value */}
-      <div className="flex-1 min-w-0">
-        <span
-          className={clsx(
-            'text-[11px] font-mono truncate block',
-            variable.isSecret && !revealed
-              ? 'text-vault-muted/35 tracking-widest'
-              : 'text-vault-text/65',
-          )}
-        >
-          {displayValue}
-        </span>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-100 shrink-0">
-        {variable.isSecret && (
-          <button
-            onClick={() => setRevealed(!revealed)}
-            className="p-1.5 rounded-md text-vault-muted/40 hover:text-vault-text hover:bg-vault-raised/60 transition-colors"
-            title={revealed ? 'Hide value' : 'Reveal value'}
-          >
-            {revealed ? (
-              <EyeOff size={12} strokeWidth={1.75} />
-            ) : (
-              <Eye size={12} strokeWidth={1.75} />
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          {/* Label (like 1Password field labels in blue) */}
+          <p className="text-[12px] font-medium text-vault-accent mb-0.5">
+            {variable.key.toLowerCase().replace(/_/g, ' ')}
+          </p>
+          {/* Value */}
+          <p
+            className={clsx(
+              'text-[14px] font-mono',
+              variable.isSecret && !revealed
+                ? 'text-vault-text/60 tracking-[0.2em]'
+                : 'text-vault-text',
             )}
-          </button>
-        )}
-        <button
-          onClick={handleCopy}
-          className={clsx(
-            'p-1.5 rounded-md transition-colors',
-            copied
-              ? 'text-vault-success'
-              : 'text-vault-muted/40 hover:text-vault-text hover:bg-vault-raised/60',
+          >
+            {displayValue}
+          </p>
+          {/* Description */}
+          {variable.description && (
+            <p className="text-[11px] text-vault-muted mt-0.5">{variable.description}</p>
           )}
-          title="Copy value"
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => e.stopPropagation()}
         >
-          <Copy size={12} strokeWidth={1.75} />
-        </button>
+          {variable.isSecret && (
+            <button
+              onClick={() => setRevealed(!revealed)}
+              className="p-1.5 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
+              title={revealed ? 'Hide value' : 'Reveal value'}
+            >
+              {revealed ? <EyeOff size={14} strokeWidth={1.75} /> : <Eye size={14} strokeWidth={1.75} />}
+            </button>
+          )}
+          <button
+            onClick={handleCopy}
+            className={clsx(
+              'p-1.5 rounded-lg transition-colors',
+              copied
+                ? 'text-vault-success'
+                : 'text-vault-muted hover:text-vault-text hover:bg-vault-raised',
+            )}
+            title="Copy value"
+          >
+            {copied ? <Check size={14} strokeWidth={2} /> : <Copy size={14} strokeWidth={1.75} />}
+          </button>
+          <button
+            onClick={() => onDelete(variable)}
+            className="p-1.5 rounded-lg text-vault-muted hover:text-vault-danger hover:bg-vault-danger/10 transition-colors"
+            title="Delete variable"
+          >
+            <Trash2 size={14} strokeWidth={1.75} />
+          </button>
+        </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 // ─── Environment tabs + variable list ────────────────────────────────────────
 
-interface EnvTabsProps {
+interface EnvSectionProps {
   environments: Environment[];
   projectId: string;
 }
 
-function EnvTabs({ environments, projectId }: EnvTabsProps) {
+function EnvSection({ environments, projectId }: EnvSectionProps) {
   const [activeEnvId, setActiveEnvId] = useState<string>(environments[0]?.id ?? '');
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingVariable, setEditingVariable] = useState<EnvVariable | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EnvVariable | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { addVariable, updateVariable, deleteVariable } = useVaultStore();
+  const addToast = useToastStore((s) => s.addToast);
 
   // Reset tab when environments change (different project selected)
   useEffect(() => {
@@ -171,18 +181,74 @@ function EnvTabs({ environments, projectId }: EnvTabsProps) {
     [environments, activeEnvId],
   );
 
+  const existingKeys = useMemo(
+    () => (activeEnv?.variables ?? []).map((v) => v.key),
+    [activeEnv],
+  );
+
+  const handleAddVariable = useCallback(() => {
+    setEditingVariable(null);
+    setEditorOpen(true);
+  }, []);
+
+  const handleEditVariable = useCallback((variable: EnvVariable) => {
+    setEditingVariable(variable);
+    setEditorOpen(true);
+  }, []);
+
+  const handleSaveVariable = useCallback(
+    async (data: Partial<EnvVariable>) => {
+      if (!activeEnv) return;
+      try {
+        if (editingVariable) {
+          await updateVariable(projectId, activeEnv.id, editingVariable.id, data);
+          addToast('success', 'Variable updated');
+
+        } else {
+          await addVariable(projectId, activeEnv.id, data);
+          addToast('success', 'Variable added');
+
+        }
+      } catch {
+        addToast('error', 'Failed to save variable');
+
+      }
+    },
+    [activeEnv, editingVariable, projectId, addVariable, updateVariable, addToast],
+  );
+
+  const handleDeleteVariable = useCallback(async () => {
+    if (!activeEnv || !deleteTarget) return;
+    setIsDeleting(true);
+    try {
+      await deleteVariable(projectId, activeEnv.id, deleteTarget.id);
+      addToast('success', 'Variable deleted');
+
+      setDeleteTarget(null);
+    } catch {
+      addToast('error', 'Failed to delete variable');
+
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [activeEnv, deleteTarget, projectId, deleteVariable, addToast]);
+
   if (environments.length === 0) {
     return (
       <FadeIn className="flex-1 flex items-center justify-center py-12">
-        <p className="text-[12px] text-vault-muted/40">No environments configured</p>
+        <p className="text-[13px] text-vault-muted">No environments configured</p>
       </FadeIn>
     );
   }
 
+  // Separate secret and non-secret variables
+  const regularVars = activeEnv?.variables.filter((v) => !v.isSecret) ?? [];
+  const secretVars = activeEnv?.variables.filter((v) => v.isSecret) ?? [];
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Tab bar */}
-      <div className="flex items-center gap-0.5 px-6 pt-4 pb-0 border-b border-vault-border/20 shrink-0">
+      <div className="flex items-center gap-0.5 px-6 pt-3 pb-0 border-b border-vault-border shrink-0">
         {environments.map((env) => {
           const isActive = env.id === activeEnvId;
           return (
@@ -190,15 +256,15 @@ function EnvTabs({ environments, projectId }: EnvTabsProps) {
               key={env.id}
               onClick={() => setActiveEnvId(env.id)}
               className={clsx(
-                'relative px-3 pb-3 pt-1 text-[12px] font-medium transition-colors duration-150',
-                isActive ? 'text-vault-accent' : 'text-vault-muted/50 hover:text-vault-muted',
+                'relative px-3 pb-2.5 pt-1 text-[13px] font-medium transition-colors duration-100',
+                isActive ? 'text-vault-accent' : 'text-vault-muted hover:text-vault-text',
               )}
             >
               {env.name}
               <span
                 className={clsx(
-                  'ml-1.5 text-[10px] tabular-nums',
-                  isActive ? 'text-vault-accent/60' : 'text-vault-muted/30',
+                  'ml-1.5 text-[11px] tabular-nums',
+                  isActive ? 'text-vault-accent/60' : 'text-vault-muted/50',
                 )}
               >
                 {env.variables.length}
@@ -215,56 +281,90 @@ function EnvTabs({ environments, projectId }: EnvTabsProps) {
         })}
       </div>
 
-      {/* Variables for active environment */}
-      <div className="flex-1 overflow-y-auto scrollbar-none">
+      {/* Variables */}
+      <div className="flex-1 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeEnvId}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-            className="min-h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.1 }}
           >
             {activeEnv && activeEnv.variables.length > 0 ? (
               <>
-                {activeEnv.variables.map((variable) => (
-                  <VariableRow
-                    key={variable.id}
-                    variable={variable}
-                    projectId={projectId}
-                    envId={activeEnv.id}
-                  />
-                ))}
+                {/* Regular variables */}
+                {regularVars.length > 0 && (
+                  <div className="border-b border-vault-border/40">
+                    {regularVars.map((variable) => (
+                      <FieldRow
+                        key={variable.id}
+                        variable={variable}
+                        projectId={projectId}
+                        envId={activeEnv.id}
+                        onEdit={handleEditVariable}
+                        onDelete={(v) => setDeleteTarget(v)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Security section header */}
+                {secretVars.length > 0 && (
+                  <>
+                    <div className="px-6 pt-4 pb-2">
+                      <p className="text-[11px] font-bold uppercase tracking-widest text-vault-text flex items-center gap-1.5">
+                        <KeyRound size={12} strokeWidth={2} />
+                        Security
+                      </p>
+                    </div>
+                    <div className="border-b border-vault-border/40">
+                      {secretVars.map((variable) => (
+                        <FieldRow
+                          key={variable.id}
+                          variable={variable}
+                          projectId={projectId}
+                          envId={activeEnv.id}
+                          onEdit={handleEditVariable}
+                          onDelete={(v) => setDeleteTarget(v)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+
                 {/* Add Variable button */}
-                <div className="px-4 py-3">
+                <div className="px-6 py-4">
                   <button
+                    onClick={handleAddVariable}
                     className={clsx(
-                      'w-full flex items-center justify-center gap-2 py-2 rounded-lg',
-                      'border border-dashed border-vault-border/35',
-                      'text-[11px] text-vault-muted/40 hover:text-vault-muted/60',
-                      'hover:border-vault-border/50 hover:bg-vault-raised/20',
+                      'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
+                      'border border-dashed border-vault-border',
+                      'text-[13px] text-vault-muted hover:text-vault-accent',
+                      'hover:border-vault-accent/40 hover:bg-vault-accent/5',
                       'transition-all duration-150',
                     )}
                   >
-                    <Plus size={12} strokeWidth={1.75} />
+                    <Plus size={14} strokeWidth={2} />
                     Add Variable
                   </button>
                 </div>
               </>
             ) : (
-              <div className="flex flex-col items-center justify-center py-12 px-6">
-                <p className="text-[12px] text-vault-muted/35 mb-4">No variables yet</p>
+              <div className="flex flex-col items-center justify-center py-16 px-6">
+                <div className="w-12 h-12 rounded-xl bg-vault-surface border border-vault-border flex items-center justify-center mb-3">
+                  <KeyRound size={20} className="text-vault-muted" strokeWidth={1.5} />
+                </div>
+                <p className="text-[13px] text-vault-muted mb-4">No variables yet</p>
                 <button
+                  onClick={handleAddVariable}
                   className={clsx(
                     'flex items-center gap-2 px-4 py-2 rounded-lg',
-                    'border border-dashed border-vault-border/35',
-                    'text-[12px] text-vault-muted/40 hover:text-vault-muted/60',
-                    'hover:border-vault-border/50 hover:bg-vault-raised/20',
-                    'transition-all duration-150',
+                    'bg-vault-accent text-white text-[13px] font-medium',
+                    'hover:bg-vault-accent-hover transition-colors',
                   )}
                 >
-                  <Plus size={13} strokeWidth={1.75} />
+                  <Plus size={14} strokeWidth={2} />
                   Add first variable
                 </button>
               </div>
@@ -272,54 +372,104 @@ function EnvTabs({ environments, projectId }: EnvTabsProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Notes section */}
+        {/* Last edited section */}
         {activeEnv && (
-          <div className="px-4 pt-2 pb-5 border-t border-vault-border/15">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-vault-muted/35 mb-2 mt-3">
-              Notes
-            </p>
-            {activeEnv.notes ? (
-              <textarea
-                defaultValue={activeEnv.notes}
-                rows={3}
-                className={clsx(
-                  'w-full px-3 py-2 text-[12px] rounded-lg resize-none',
-                  'bg-vault-surface/30 text-vault-text/70 placeholder-vault-muted/30',
-                  'border border-vault-border/25',
-                  'focus:border-vault-border/50 focus:outline-none',
-                  'transition-colors duration-150',
-                )}
-              />
-            ) : (
-              <button
-                className={clsx(
-                  'w-full text-left px-3 py-2 text-[12px] rounded-lg',
-                  'bg-vault-surface/20 text-vault-muted/30 italic',
-                  'border border-vault-border/20 border-dashed',
-                  'hover:bg-vault-raised/20 hover:text-vault-muted/50',
-                  'transition-all duration-150',
-                )}
-              >
-                Add notes...
-              </button>
-            )}
+          <div className="px-6 py-3 border-t border-vault-border/40">
+            <button className="flex items-center gap-1.5 text-[12px] text-vault-muted hover:text-vault-text transition-colors">
+              <ChevronDown size={14} strokeWidth={1.75} />
+              <span>Last edited {new Date(activeEnv.notes ? Date.now() : Date.now()).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}</span>
+            </button>
           </div>
         )}
       </div>
+
+      {/* EnvEditor modal */}
+      <EnvEditor
+        isOpen={editorOpen}
+        onClose={() => {
+          setEditorOpen(false);
+          setEditingVariable(null);
+        }}
+        onSave={handleSaveVariable}
+        existingVariable={editingVariable}
+        existingKeys={existingKeys}
+      />
+
+      {/* Delete confirmation */}
+      <DeleteConfirm
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteVariable}
+        isLoading={isDeleting}
+        title="Delete Variable"
+        description={`Are you sure you want to delete "${deleteTarget?.key}"? This action cannot be undone.`}
+      />
     </div>
   );
 }
 
 // ─── Project detail ───────────────────────────────────────────────────────────
 
-function ProjectDetail({ project }: { project: VaultProject }) {
-  const { toggleFavorite } = useVaultStore();
+interface ProjectDetailProps {
+  project: VaultProject;
+  onEdit: () => void;
+}
+
+function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
+  const { toggleFavorite, deleteProject } = useVaultStore();
+  const addToast = useToastStore((s) => s.addToast);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const categoryColor = CATEGORY_COLORS[project.category];
 
-  const totalVars = useMemo(
-    () => project.environments.reduce((sum, env) => sum + env.variables.length, 0),
-    [project.environments],
-  );
+  const handleExport = useCallback(async () => {
+    if (project.environments.length === 0) return;
+    try {
+      const result = await apiLib.exportEnv(project.id, project.environments[0].id);
+      if (result.success) {
+        addToast('success', `Exported to ${result.path}`);
+
+      }
+    } catch {
+      addToast('error', 'Failed to export');
+
+    }
+  }, [project, addToast]);
+
+  const handleImport = useCallback(async () => {
+    if (project.environments.length === 0) return;
+    try {
+      const result = await apiLib.importEnv(project.id, project.environments[0].id);
+      if (result.success) {
+        addToast('success', `Imported ${result.count} variables`);
+
+        useVaultStore.getState().refreshProjects();
+      }
+    } catch {
+      addToast('error', 'Failed to import');
+
+    }
+  }, [project, addToast]);
+
+  const handleDelete = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      await deleteProject(project.id);
+      addToast('success', 'Project deleted');
+
+      setShowDeleteConfirm(false);
+    } catch {
+      addToast('error', 'Failed to delete project');
+
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [project.id, deleteProject, addToast]);
 
   return (
     <motion.div
@@ -329,155 +479,169 @@ function ProjectDetail({ project }: { project: VaultProject }) {
       exit="exit"
       className="h-full flex flex-col"
     >
+      {/* Top bar with breadcrumb and actions */}
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-vault-border shrink-0">
+        <div className="flex items-center gap-2 text-[13px]">
+          <span className="text-vault-muted flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-full bg-vault-accent/10 flex items-center justify-center">
+              <FolderOpen size={11} className="text-vault-accent" strokeWidth={2} />
+            </div>
+            My Vault
+          </span>
+          <span className="text-vault-muted">&middot;</span>
+          <span
+            className="font-medium px-1.5 py-0.5 rounded text-[12px]"
+            style={{ backgroundColor: `${categoryColor}12`, color: categoryColor }}
+          >
+            {CATEGORY_LABELS[project.category]}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors">
+            <Share2 size={13} strokeWidth={1.75} />
+            Share
+          </button>
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors"
+          >
+            <Edit3 size={13} strokeWidth={1.75} />
+            Edit
+          </button>
+          <button className="p-1 rounded-lg text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors">
+            <MoreVertical size={15} strokeWidth={1.75} />
+          </button>
+        </div>
+      </div>
+
       {/* Header */}
-      <div className="px-6 pt-5 pb-4 border-b border-vault-border/20 shrink-0">
-        <div className="flex items-start gap-4">
+      <div className="px-6 pt-6 pb-4 shrink-0">
+        <div className="flex flex-col items-center text-center">
           {/* Project icon */}
           <div
-            className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center text-xl shrink-0 border border-white/5"
-            style={{ backgroundColor: `${categoryColor}12` }}
+            className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mb-3 border border-vault-border"
+            style={{ backgroundColor: `${categoryColor}10` }}
           >
             {project.icon.length <= 2 ? (
               <span>{project.icon}</span>
             ) : (
-              <FolderOpen size={22} style={{ color: categoryColor }} strokeWidth={1.5} />
+              <FolderOpen size={28} style={{ color: categoryColor }} strokeWidth={1.5} />
             )}
           </div>
 
-          {/* Title + meta */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-0.5">
-              <h1 className="text-[18px] font-bold text-vault-text truncate leading-tight">
-                {project.name}
-              </h1>
-              <button
-                onClick={() => toggleFavorite(project.id)}
-                className={clsx(
-                  'p-1 rounded transition-colors shrink-0',
-                  project.isFavorite
-                    ? 'text-yellow-500'
-                    : 'text-vault-muted/25 hover:text-vault-muted/60',
-                )}
-                title={project.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                <Star
-                  size={15}
-                  strokeWidth={1.75}
-                  fill={project.isFavorite ? 'currentColor' : 'none'}
-                />
-              </button>
-            </div>
+          {/* Name */}
+          <h1 className="text-[22px] font-bold text-vault-text mb-1">
+            {project.name}
+          </h1>
 
-            {project.description && (
-              <p className="text-[13px] text-vault-muted/70 leading-snug mb-2">
-                {project.description}
-              </p>
+          {/* Favorite star */}
+          <button
+            onClick={() => toggleFavorite(project.id)}
+            className={clsx(
+              'p-1 rounded transition-colors mb-2',
+              project.isFavorite
+                ? 'text-yellow-500'
+                : 'text-vault-muted/30 hover:text-yellow-500',
             )}
+          >
+            <Star
+              size={18}
+              strokeWidth={1.75}
+              fill={project.isFavorite ? 'currentColor' : 'none'}
+            />
+          </button>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Category badge */}
-              <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: `${categoryColor}15`,
-                  color: categoryColor,
-                  border: `1px solid ${categoryColor}22`,
-                }}
-              >
-                {CATEGORY_LABELS[project.category]}
-              </span>
+          {/* Description */}
+          {project.description && (
+            <p className="text-[13px] text-vault-muted mb-3 max-w-md">
+              {project.description}
+            </p>
+          )}
 
-              {/* Tags */}
+          {/* Tags */}
+          {project.tags.length > 0 && (
+            <div className="flex items-center gap-1.5 flex-wrap justify-center mb-2">
               {project.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="flex items-center gap-1 text-[10px] text-vault-muted/55 px-1.5 py-0.5 rounded-md bg-vault-bg/60 border border-vault-border/20"
+                  className="flex items-center gap-1 text-[11px] text-vault-muted px-2 py-0.5 rounded-full bg-vault-surface border border-vault-border"
                 >
-                  <Tag size={9} strokeWidth={1.75} />
+                  <Tag size={9} strokeWidth={2} />
                   {tag}
                 </span>
               ))}
-
-              {/* Modified date — pushed right */}
-              <span className="text-[10px] text-vault-muted/35 flex items-center gap-1 ml-auto">
-                <Clock size={9} strokeWidth={1.75} />
-                {new Date(project.modifiedAt).toLocaleDateString()}
-              </span>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Action bar */}
-        <div className="flex items-center gap-1.5 mt-4">
+        <div className="flex items-center justify-center gap-2 mt-3">
           <button
-            className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]',
-              'bg-vault-raised/40 text-vault-muted/60 hover:text-vault-text',
-              'border border-vault-border/25 hover:border-vault-border/45',
-              'transition-all duration-150',
-            )}
+            onClick={onEdit}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-vault-surface border border-vault-border text-vault-text hover:bg-vault-raised transition-colors"
           >
-            <Edit3 size={11} strokeWidth={1.75} />
+            <Edit3 size={12} strokeWidth={1.75} />
             Edit
           </button>
           <button
-            className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]',
-              'bg-vault-raised/40 text-vault-muted/60 hover:text-vault-text',
-              'border border-vault-border/25 hover:border-vault-border/45',
-              'transition-all duration-150',
-            )}
+            onClick={handleExport}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-vault-surface border border-vault-border text-vault-text hover:bg-vault-raised transition-colors"
           >
-            <Download size={11} strokeWidth={1.75} />
+            <Download size={12} strokeWidth={1.75} />
             Export
           </button>
           <button
-            className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px]',
-              'bg-vault-raised/40 text-vault-muted/60 hover:text-vault-text',
-              'border border-vault-border/25 hover:border-vault-border/45',
-              'transition-all duration-150',
-            )}
+            onClick={handleImport}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-vault-surface border border-vault-border text-vault-text hover:bg-vault-raised transition-colors"
           >
-            <Upload size={11} strokeWidth={1.75} />
+            <Upload size={12} strokeWidth={1.75} />
             Import
           </button>
-
-          <div className="flex-1" />
-
-          <span className="text-[10px] text-vault-muted/30 tabular-nums">
-            {totalVars} var{totalVars !== 1 ? 's' : ''} &middot; {project.environments.length} env{project.environments.length !== 1 ? 's' : ''}
-          </span>
-
           <button
-            className={clsx(
-              'p-1.5 rounded-lg text-vault-muted/25 hover:text-vault-danger hover:bg-vault-danger/8',
-              'transition-colors duration-150',
-            )}
-            title="Delete project"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium text-vault-danger hover:bg-vault-danger/10 border border-transparent hover:border-vault-danger/20 transition-colors"
           >
-            <Trash2 size={13} strokeWidth={1.75} />
+            <Trash2 size={12} strokeWidth={1.75} />
+            Delete
           </button>
         </div>
       </div>
 
       {/* Environment tabs + variables */}
-      <EnvTabs environments={project.environments} projectId={project.id} />
+      <EnvSection environments={project.environments} projectId={project.id} />
+
+      {/* Delete project confirmation */}
+      <DeleteConfirm
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+        title="Delete Project"
+        description={`Are you sure you want to delete "${project.name}"? All environments and variables will be permanently deleted.`}
+      />
     </motion.div>
   );
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-export function DetailPane() {
+interface DetailPaneProps {
+  onEditProject?: (project: VaultProject) => void;
+}
+
+export function DetailPane({ onEditProject }: DetailPaneProps) {
   const selectedProject = useVaultStore((s) => s.selectedProject);
   const project = selectedProject();
 
   return (
-    <div className="flex-1 min-w-0 h-full bg-vault-bg flex flex-col">
+    <div className="flex-1 min-w-0 h-full bg-white flex flex-col">
       <AnimatePresence mode="wait">
         {project ? (
-          <ProjectDetail key={project.id} project={project} />
+          <ProjectDetail
+            key={project.id}
+            project={project}
+            onEdit={() => onEditProject?.(project)}
+          />
         ) : (
           <motion.div
             key="empty"

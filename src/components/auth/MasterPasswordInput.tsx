@@ -53,12 +53,11 @@ export function MasterPasswordInput({
         disabled={disabled}
         className={clsx(
           'w-full px-4 py-3.5 pr-12 rounded-xl text-base',
-          'bg-vault-bg/60 text-vault-text placeholder-vault-muted',
+          'bg-white text-vault-text placeholder-vault-muted',
           'border transition-all duration-200 outline-none',
-          'backdrop-blur-sm',
           error
-            ? 'border-vault-danger/60 shadow-[0_0_20px_rgba(239,68,68,0.15)]'
-            : 'border-vault-border focus:border-vault-accent focus:shadow-[0_0_20px_rgba(99,102,241,0.15)]',
+            ? 'border-vault-danger shadow-[0_0_0_3px_rgba(255,59,48,0.1)]'
+            : 'border-vault-border focus:border-vault-accent focus:shadow-[0_0_0_3px_rgba(0,102,204,0.1)]',
           disabled && 'opacity-50 cursor-not-allowed',
         )}
         spellCheck={false}

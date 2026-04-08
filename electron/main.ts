@@ -20,7 +20,7 @@ function createWindow(): void {
     frame: false,
     titleBarStyle: 'hiddenInset',
     vibrancy: 'under-window',
-    backgroundColor: '#0a0a0f',
+    backgroundColor: '#ffffff',
     trafficLightPosition: { x: 16, y: 18 },
     show: false,
     webPreferences: {
