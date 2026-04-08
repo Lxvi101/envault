@@ -12,17 +12,17 @@ interface FadeInProps {
 }
 
 const directionOffsets: Record<Direction, { x: number; y: number }> = {
-  up: { x: 0, y: 20 },
-  down: { x: 0, y: -20 },
-  left: { x: 20, y: 0 },
-  right: { x: -20, y: 0 },
+  up: { x: 0, y: 8 },
+  down: { x: 0, y: -8 },
+  left: { x: 8, y: 0 },
+  right: { x: -8, y: 0 },
 };
 
 export function FadeIn({
   children,
   direction = 'up',
   delay = 0,
-  duration = 0.4,
+  duration = 0.15,
   className,
 }: FadeInProps) {
   const offset = directionOffsets[direction];

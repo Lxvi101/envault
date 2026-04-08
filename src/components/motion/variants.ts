@@ -1,92 +1,83 @@
+// All animations stripped down for instant, snappy feel.
+// No blur filters (extremely expensive GPU operations).
+
 export const pageVariants = {
-  initial: { opacity: 0, x: 20, filter: 'blur(4px)' },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    x: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.1 },
   },
   exit: {
     opacity: 0,
-    x: -20,
-    filter: 'blur(4px)',
-    transition: { duration: 0.2 },
+    transition: { duration: 0.05 },
   },
 };
 
 export const listContainerVariants = {
   animate: {
-    transition: { staggerChildren: 0.04, delayChildren: 0.05 },
+    transition: { staggerChildren: 0.02 },
   },
 };
 
 export const listItemVariants = {
-  initial: { opacity: 0, y: 10, scale: 0.98 },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.15 },
   },
 };
 
 export const modalVariants = {
-  initial: { opacity: 0, scale: 0.95, y: 10 },
+  initial: { opacity: 0, scale: 0.97 },
   animate: {
     opacity: 1,
     scale: 1,
-    y: 0,
-    transition: { type: 'spring', damping: 25, stiffness: 300 },
+    transition: { duration: 0.15, ease: [0.22, 1, 0.36, 1] },
   },
   exit: {
     opacity: 0,
-    scale: 0.95,
-    y: 10,
-    transition: { duration: 0.15 },
+    scale: 0.97,
+    transition: { duration: 0.1 },
   },
 };
 
 export const overlayVariants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.1 } },
+  exit: { opacity: 0, transition: { duration: 0.1 } },
 };
 
 export const lockScreenVariants = {
-  initial: { opacity: 0, y: 30, filter: 'blur(10px)' },
+  initial: { opacity: 0 },
   animate: {
     opacity: 1,
-    y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.3 },
   },
   exit: {
     opacity: 0,
-    y: -30,
-    filter: 'blur(10px)',
-    transition: { duration: 0.3 },
+    transition: { duration: 0.15 },
   },
 };
 
 export const sidebarItemVariants = {
-  initial: { opacity: 0, x: -10 },
-  animate: { opacity: 1, x: 0 },
+  initial: { opacity: 1 },
+  animate: { opacity: 1 },
 };
 
 export const fadeInUp = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 12 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export const scaleIn = {
-  initial: { opacity: 0, scale: 0.9 },
+  initial: { opacity: 0, scale: 0.95 },
   animate: {
     opacity: 1,
     scale: 1,
-    transition: { type: 'spring', damping: 20, stiffness: 300 },
+    transition: { duration: 0.15 },
   },
 };

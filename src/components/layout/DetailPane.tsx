@@ -1,5 +1,4 @@
 import { useMemo, useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
   Shield,
   Copy,
@@ -23,7 +22,6 @@ import clsx from 'clsx';
 import { useVaultStore } from '@/stores/useVaultStore';
 import { useToastStore } from '@/stores/useToastStore';
 import * as apiLib from '@/lib/api';
-import { pageVariants } from '@/components/motion/variants';
 import { FadeIn } from '@/components/motion/FadeIn';
 import { EnvEditor } from '@/components/vault/EnvEditor';
 import { DeleteConfirm } from '@/components/vault/DeleteConfirm';
@@ -54,8 +52,6 @@ function EmptyDetailState() {
 
 interface FieldRowProps {
   variable: EnvVariable;
-  projectId: string;
-  envId: string;
   onEdit: (variable: EnvVariable) => void;
   onDelete: (variable: EnvVariable) => void;
 }
@@ -64,12 +60,9 @@ function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const displayValue = useMemo(() => {
-    if (variable.isSecret && !revealed) {
-      return '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022';
-    }
-    return variable.value;
-  }, [variable.isSecret, variable.value, revealed]);
+  const displayValue = variable.isSecret && !revealed
+    ? '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'
+    : variable.value;
 
   const handleCopy = useCallback(async () => {
     try {
@@ -87,17 +80,15 @@ function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
     <div
       className={clsx(
         'group px-6 py-3 border-b border-vault-border/60 last:border-b-0',
-        'hover:bg-vault-surface/50 transition-colors duration-100 cursor-pointer',
+        'hover:bg-vault-surface/50 transition-colors duration-75 cursor-pointer',
       )}
       onClick={() => onEdit(variable)}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          {/* Label (like 1Password field labels in blue) */}
           <p className="text-[12px] font-medium text-vault-accent mb-0.5">
             {variable.key.toLowerCase().replace(/_/g, ' ')}
           </p>
-          {/* Value */}
           <p
             className={clsx(
               'text-[14px] font-mono',
@@ -108,14 +99,12 @@ function FieldRow({ variable, onEdit, onDelete }: FieldRowProps) {
           >
             {displayValue}
           </p>
-          {/* Description */}
           {variable.description && (
             <p className="text-[11px] text-vault-muted mt-0.5">{variable.description}</p>
           )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-75"
           onClick={(e) => e.stopPropagation()}
         >
           {variable.isSecret && (
@@ -169,7 +158,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
   const { addVariable, updateVariable, deleteVariable } = useVaultStore();
   const addToast = useToastStore((s) => s.addToast);
 
-  // Reset tab when environments change (different project selected)
+  // Reset tab when project changes (different environments array reference)
   useEffect(() => {
     if (environments.length > 0) {
       setActiveEnvId(environments[0].id);
@@ -203,15 +192,12 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
         if (editingVariable) {
           await updateVariable(projectId, activeEnv.id, editingVariable.id, data);
           addToast('success', 'Variable updated');
-
         } else {
           await addVariable(projectId, activeEnv.id, data);
           addToast('success', 'Variable added');
-
         }
       } catch {
         addToast('error', 'Failed to save variable');
-
       }
     },
     [activeEnv, editingVariable, projectId, addVariable, updateVariable, addToast],
@@ -223,11 +209,9 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
     try {
       await deleteVariable(projectId, activeEnv.id, deleteTarget.id);
       addToast('success', 'Variable deleted');
-
       setDeleteTarget(null);
     } catch {
       addToast('error', 'Failed to delete variable');
-
     } finally {
       setIsDeleting(false);
     }
@@ -235,13 +219,12 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
 
   if (environments.length === 0) {
     return (
-      <FadeIn className="flex-1 flex items-center justify-center py-12">
+      <div className="flex-1 flex items-center justify-center py-12">
         <p className="text-[13px] text-vault-muted">No environments configured</p>
-      </FadeIn>
+      </div>
     );
   }
 
-  // Separate secret and non-secret variables
   const regularVars = activeEnv?.variables.filter((v) => !v.isSecret) ?? [];
   const secretVars = activeEnv?.variables.filter((v) => v.isSecret) ?? [];
 
@@ -256,7 +239,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
               key={env.id}
               onClick={() => setActiveEnvId(env.id)}
               className={clsx(
-                'relative px-3 pb-2.5 pt-1 text-[13px] font-medium transition-colors duration-100',
+                'relative px-3 pb-2.5 pt-1 text-[13px] font-medium transition-colors duration-75',
                 isActive ? 'text-vault-accent' : 'text-vault-muted hover:text-vault-text',
               )}
             >
@@ -270,11 +253,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
                 {env.variables.length}
               </span>
               {isActive && (
-                <motion.div
-                  layoutId="active-env-tab"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-vault-accent rounded-t-full"
-                  transition={{ type: 'spring', damping: 30, stiffness: 400 }}
-                />
+                <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-vault-accent rounded-t-full" />
               )}
             </button>
           );
@@ -283,107 +262,90 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
 
       {/* Variables */}
       <div className="flex-1 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeEnvId}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-          >
-            {activeEnv && activeEnv.variables.length > 0 ? (
-              <>
-                {/* Regular variables */}
-                {regularVars.length > 0 && (
-                  <div className="border-b border-vault-border/40">
-                    {regularVars.map((variable) => (
-                      <FieldRow
-                        key={variable.id}
-                        variable={variable}
-                        projectId={projectId}
-                        envId={activeEnv.id}
-                        onEdit={handleEditVariable}
-                        onDelete={(v) => setDeleteTarget(v)}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {/* Security section header */}
-                {secretVars.length > 0 && (
-                  <>
-                    <div className="px-6 pt-4 pb-2">
-                      <p className="text-[11px] font-bold uppercase tracking-widest text-vault-text flex items-center gap-1.5">
-                        <KeyRound size={12} strokeWidth={2} />
-                        Security
-                      </p>
-                    </div>
-                    <div className="border-b border-vault-border/40">
-                      {secretVars.map((variable) => (
-                        <FieldRow
-                          key={variable.id}
-                          variable={variable}
-                          projectId={projectId}
-                          envId={activeEnv.id}
-                          onEdit={handleEditVariable}
-                          onDelete={(v) => setDeleteTarget(v)}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* Add Variable button */}
-                <div className="px-6 py-4">
-                  <button
-                    onClick={handleAddVariable}
-                    className={clsx(
-                      'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
-                      'border border-dashed border-vault-border',
-                      'text-[13px] text-vault-muted hover:text-vault-accent',
-                      'hover:border-vault-accent/40 hover:bg-vault-accent/5',
-                      'transition-all duration-150',
-                    )}
-                  >
-                    <Plus size={14} strokeWidth={2} />
-                    Add Variable
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-16 px-6">
-                <div className="w-12 h-12 rounded-xl bg-vault-surface border border-vault-border flex items-center justify-center mb-3">
-                  <KeyRound size={20} className="text-vault-muted" strokeWidth={1.5} />
-                </div>
-                <p className="text-[13px] text-vault-muted mb-4">No variables yet</p>
-                <button
-                  onClick={handleAddVariable}
-                  className={clsx(
-                    'flex items-center gap-2 px-4 py-2 rounded-lg',
-                    'bg-vault-accent text-white text-[13px] font-medium',
-                    'hover:bg-vault-accent-hover transition-colors',
-                  )}
-                >
-                  <Plus size={14} strokeWidth={2} />
-                  Add first variable
-                </button>
+        {activeEnv && activeEnv.variables.length > 0 ? (
+          <>
+            {regularVars.length > 0 && (
+              <div className="border-b border-vault-border/40">
+                {regularVars.map((variable) => (
+                  <FieldRow
+                    key={variable.id}
+                    variable={variable}
+                    onEdit={handleEditVariable}
+                    onDelete={(v) => setDeleteTarget(v)}
+                  />
+                ))}
               </div>
             )}
-          </motion.div>
-        </AnimatePresence>
+
+            {secretVars.length > 0 && (
+              <>
+                <div className="px-6 pt-4 pb-2">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-vault-text flex items-center gap-1.5">
+                    <KeyRound size={12} strokeWidth={2} />
+                    Security
+                  </p>
+                </div>
+                <div className="border-b border-vault-border/40">
+                  {secretVars.map((variable) => (
+                    <FieldRow
+                      key={variable.id}
+                      variable={variable}
+                      onEdit={handleEditVariable}
+                      onDelete={(v) => setDeleteTarget(v)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="px-6 py-4">
+              <button
+                onClick={handleAddVariable}
+                className={clsx(
+                  'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
+                  'border border-dashed border-vault-border',
+                  'text-[13px] text-vault-muted hover:text-vault-accent',
+                  'hover:border-vault-accent/40 hover:bg-vault-accent/5',
+                  'transition-all duration-100',
+                )}
+              >
+                <Plus size={14} strokeWidth={2} />
+                Add Variable
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 px-6">
+            <div className="w-12 h-12 rounded-xl bg-vault-surface border border-vault-border flex items-center justify-center mb-3">
+              <KeyRound size={20} className="text-vault-muted" strokeWidth={1.5} />
+            </div>
+            <p className="text-[13px] text-vault-muted mb-4">No variables yet</p>
+            <button
+              onClick={handleAddVariable}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2 rounded-lg',
+                'bg-vault-accent text-white text-[13px] font-medium',
+                'hover:bg-vault-accent-hover transition-colors',
+              )}
+            >
+              <Plus size={14} strokeWidth={2} />
+              Add first variable
+            </button>
+          </div>
+        )}
 
         {/* Last edited section */}
         {activeEnv && (
           <div className="px-6 py-3 border-t border-vault-border/40">
-            <button className="flex items-center gap-1.5 text-[12px] text-vault-muted hover:text-vault-text transition-colors">
+            <span className="flex items-center gap-1.5 text-[12px] text-vault-muted">
               <ChevronDown size={14} strokeWidth={1.75} />
-              <span>Last edited {new Date(activeEnv.notes ? Date.now() : Date.now()).toLocaleDateString('en-US', {
+              Last edited {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-              })}</span>
-            </button>
+              })}
+            </span>
           </div>
         )}
       </div>
@@ -433,11 +395,9 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
       const result = await apiLib.exportEnv(project.id, project.environments[0].id);
       if (result.success) {
         addToast('success', `Exported to ${result.path}`);
-
       }
     } catch {
       addToast('error', 'Failed to export');
-
     }
   }, [project, addToast]);
 
@@ -447,12 +407,10 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
       const result = await apiLib.importEnv(project.id, project.environments[0].id);
       if (result.success) {
         addToast('success', `Imported ${result.count} variables`);
-
         useVaultStore.getState().refreshProjects();
       }
     } catch {
       addToast('error', 'Failed to import');
-
     }
   }, [project, addToast]);
 
@@ -461,24 +419,16 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
     try {
       await deleteProject(project.id);
       addToast('success', 'Project deleted');
-
       setShowDeleteConfirm(false);
     } catch {
       addToast('error', 'Failed to delete project');
-
     } finally {
       setIsDeleting(false);
     }
   }, [project.id, deleteProject, addToast]);
 
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="h-full flex flex-col"
-    >
+    <div className="h-full flex flex-col animate-fade-in">
       {/* Top bar with breadcrumb and actions */}
       <div className="flex items-center justify-between px-6 py-2.5 border-b border-vault-border shrink-0">
         <div className="flex items-center gap-2 text-[13px]">
@@ -517,7 +467,6 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
       {/* Header */}
       <div className="px-6 pt-6 pb-4 shrink-0">
         <div className="flex flex-col items-center text-center">
-          {/* Project icon */}
           <div
             className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl mb-3 border border-vault-border"
             style={{ backgroundColor: `${categoryColor}10` }}
@@ -529,12 +478,10 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
             )}
           </div>
 
-          {/* Name */}
           <h1 className="text-[22px] font-bold text-vault-text mb-1">
             {project.name}
           </h1>
 
-          {/* Favorite star */}
           <button
             onClick={() => toggleFavorite(project.id)}
             className={clsx(
@@ -551,14 +498,12 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
             />
           </button>
 
-          {/* Description */}
           {project.description && (
             <p className="text-[13px] text-vault-muted mb-3 max-w-md">
               {project.description}
             </p>
           )}
 
-          {/* Tags */}
           {project.tags.length > 0 && (
             <div className="flex items-center gap-1.5 flex-wrap justify-center mb-2">
               {project.tags.map((tag) => (
@@ -574,7 +519,6 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
           )}
         </div>
 
-        {/* Action bar */}
         <div className="flex items-center justify-center gap-2 mt-3">
           <button
             onClick={onEdit}
@@ -619,7 +563,7 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
         title="Delete Project"
         description={`Are you sure you want to delete "${project.name}"? All environments and variables will be permanently deleted.`}
       />
-    </motion.div>
+    </div>
   );
 }
 
@@ -630,31 +574,27 @@ interface DetailPaneProps {
 }
 
 export function DetailPane({ onEditProject }: DetailPaneProps) {
-  const selectedProject = useVaultStore((s) => s.selectedProject);
-  const project = selectedProject();
+  // Subscribe to the actual reactive values, not the function
+  const selectedProjectId = useVaultStore((s) => s.selectedProjectId);
+  const projects = useVaultStore((s) => s.projects);
+
+  // Derive the project inline from reactive state
+  const project = useMemo(
+    () => projects.find((p) => p.id === selectedProjectId),
+    [projects, selectedProjectId],
+  );
 
   return (
     <div className="flex-1 min-w-0 h-full bg-white flex flex-col">
-      <AnimatePresence mode="wait">
-        {project ? (
-          <ProjectDetail
-            key={project.id}
-            project={project}
-            onEdit={() => onEditProject?.(project)}
-          />
-        ) : (
-          <motion.div
-            key="empty"
-            variants={pageVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="flex-1 flex flex-col h-full"
-          >
-            <EmptyDetailState />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {project ? (
+        <ProjectDetail
+          key={project.id}
+          project={project}
+          onEdit={() => onEditProject?.(project)}
+        />
+      ) : (
+        <EmptyDetailState />
+      )}
     </div>
   );
 }

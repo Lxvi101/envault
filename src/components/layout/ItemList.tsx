@@ -1,5 +1,4 @@
 import { useMemo, useState, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import { Plus, Search, Star, FolderOpen, ChevronDown, Filter, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import { useUIStore } from '@/stores/useUIStore';
@@ -204,14 +203,13 @@ export function ItemList({ onNewProject }: ItemListProps) {
             <button className="p-1 rounded text-vault-muted hover:text-vault-text hover:bg-vault-raised transition-colors" title="Filter">
               <Filter size={14} strokeWidth={1.75} />
             </button>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
+            <button
               onClick={onNewProject}
-              className="p-1 rounded text-vault-muted hover:text-vault-accent hover:bg-vault-accent/10 transition-colors"
+              className="p-1 rounded text-vault-muted hover:text-vault-accent hover:bg-vault-accent/10 transition-colors active:scale-95"
               title="New Project"
             >
               <Plus size={16} strokeWidth={2} />
-            </motion.button>
+            </button>
           </div>
         </div>
 
