@@ -3,7 +3,7 @@ productName: EnVault
 copyright: Copyright © 2026 EnVault
 
 directories:
-  buildResources: build
+  buildResources: resources
   output: release
 
 files:
@@ -12,7 +12,7 @@ files:
 
 mac:
   category: public.app-category.developer-tools
-  icon: build/icon.icns
+  icon: resources/icon.icns
   hardenedRuntime: true
   gatekeeperAssess: false
   target:
@@ -32,7 +32,7 @@ dmg:
       path: /Applications
 
 linux:
-  icon: build/icon.png
+  icon: resources/icon.png
   category: Development
   target:
     - target: AppImage
@@ -43,7 +43,7 @@ linux:
         - x64
 
 win:
-  icon: build/icon.ico
+  icon: resources/icon.ico
   target:
     - target: nsis
       arch:
