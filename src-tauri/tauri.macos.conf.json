@@ -1,0 +1,15 @@
+{
+  "app": {
+    "windows": [
+      {
+        "decorations": true,
+        "hiddenTitle": true,
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": {
+          "x": 18,
+          "y": 18
+        }
+      }
+    ]
+  }
+}

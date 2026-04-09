@@ -39,6 +39,7 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
     <div
       className={clsx(
         'h-12 flex items-center shrink-0 select-none',
+        isMac && 'pl-[78px]',
         'bg-white border-b border-vault-border',
       )}
       style={{
@@ -46,9 +47,6 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
         WebkitAppRegion: 'drag',
       }}
     >
-      {/* macOS traffic light spacer */}
-      {isMac && <div className="w-[72px] shrink-0" />}
-
       {/* Non-macOS: left padding */}
       {!isMac && <div className="w-3 shrink-0" />}
 
