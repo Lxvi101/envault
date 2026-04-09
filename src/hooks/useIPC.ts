@@ -11,15 +11,15 @@ interface UseIPCResult<TResponse> {
 /**
  * Generic typed IPC wrapper hook.
  *
- * Wraps any async function (typically a window.api call) with loading,
+ * Wraps any async function (typically a Tauri invoke call) with loading,
  * error, and data state management.
  *
- * @param fn - The async IPC function to execute
+ * @param fn - The async function to execute (e.g. a `api.*` call)
  * @returns Stateful wrapper with execute, data, loading, and error
  *
  * @example
  * ```tsx
- * const { data, isLoading, execute } = useIPC(() => window.api.getAllProjects());
+ * const { data, isLoading, execute } = useIPC(() => api.getAllProjects());
  *
  * useEffect(() => { execute(); }, [execute]);
  * ```
@@ -69,7 +69,7 @@ export function useIPC<TResponse>(fn: () => Promise<TResponse>): UseIPCResult<TR
  * @example
  * ```tsx
  * const { mutate, isLoading } = useIPCMutation(
- *   (id: string) => window.api.deleteProject(id)
+ *   (id: string) => api.deleteProject(id)
  * );
  *
  * const handleDelete = () => mutate(projectId);

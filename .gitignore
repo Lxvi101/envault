@@ -9,6 +9,7 @@ dist-electron/
 out/
 build/
 release/
+src-tauri/target/
 
 # Environment variables
 .env

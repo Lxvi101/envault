@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Copy, Check } from "lucide-react";
 import clsx from "clsx";
 import { Tooltip } from "./Tooltip";
+import * as api from "@/lib/api";
 
 interface CopyButtonProps {
   value: string;
@@ -21,11 +22,7 @@ export function CopyButton({
 
   const handleCopy = useCallback(async () => {
     try {
-      if (window.api?.copySecret) {
-        await window.api.copySecret(value);
-      } else {
-        await navigator.clipboard.writeText(value);
-      }
+      await api.copySecret(value);
       setIsCopied(true);
       onCopy?.();
       setTimeout(() => setIsCopied(false), 2000);

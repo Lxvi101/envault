@@ -1,23 +1,23 @@
+import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
+import { type } from "@tauri-apps/plugin-os";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import type { EnvVariable, VaultProject } from "../types/vault";
 
 /**
- * Typed wrapper around window.api for use in renderer components.
+ * Typed wrapper around Tauri `invoke` for use in renderer components.
  * All methods swallow rejections and return typed results or throw
  * descriptive errors so callers can surface toasts.
+ *
+ * Command names match the Rust #[tauri::command] function names
+ * (snake_case is automatically converted from camelCase by Tauri).
  */
-
-function getApi() {
-  if (!window.api) {
-    throw new Error("Electron API not available. Are you running outside of Electron?");
-  }
-  return window.api;
-}
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 
 export async function checkAuth(): Promise<{ isLocked: boolean; isFirstRun: boolean }> {
   try {
-    return await getApi().checkAuth();
+    return await invoke<{ isLocked: boolean; isFirstRun: boolean }>("check_auth");
   } catch (err) {
     throw new Error(`Failed to check auth status: ${errorMessage(err)}`);
   }
@@ -27,7 +27,7 @@ export async function unlock(
   password: string,
 ): Promise<{ success: boolean; projects?: VaultProject[] }> {
   try {
-    return await getApi().unlock(password);
+    return await invoke<{ success: boolean; projects?: VaultProject[] }>("unlock", { password });
   } catch (err) {
     throw new Error(`Failed to unlock vault: ${errorMessage(err)}`);
   }
@@ -35,15 +35,15 @@ export async function unlock(
 
 export async function lock(): Promise<void> {
   try {
-    await getApi().lock();
+    await invoke("lock");
   } catch (err) {
     throw new Error(`Failed to lock vault: ${errorMessage(err)}`);
   }
 }
 
-export async function setup(password: string): Promise<{ success: boolean }> {
+export async function setup(password: string): Promise<{ success: boolean; projects?: VaultProject[] }> {
   try {
-    return await getApi().setup(password);
+    return await invoke<{ success: boolean; projects?: VaultProject[] }>("setup", { password });
   } catch (err) {
     throw new Error(`Failed to set up vault: ${errorMessage(err)}`);
   }
@@ -55,8 +55,8 @@ type IpcResult<T> = { success: boolean; data?: T; error?: string };
 
 export async function getAllProjects(): Promise<VaultProject[]> {
   try {
-    const result = (await getApi().getAllProjects() as unknown) as IpcResult<VaultProject[]>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to get projects');
+    const result = await invoke<IpcResult<VaultProject[]>>("get_all_projects");
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to get projects");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to fetch projects: ${errorMessage(err)}`);
@@ -65,8 +65,8 @@ export async function getAllProjects(): Promise<VaultProject[]> {
 
 export async function createProject(data: Partial<VaultProject>): Promise<VaultProject> {
   try {
-    const result = (await getApi().createProject(data) as unknown) as IpcResult<VaultProject>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to create project');
+    const result = await invoke<IpcResult<VaultProject>>("create_project", { data });
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to create project");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to create project: ${errorMessage(err)}`);
@@ -78,8 +78,8 @@ export async function updateProject(
   data: Partial<VaultProject>,
 ): Promise<VaultProject> {
   try {
-    const result = (await getApi().updateProject(id, data) as unknown) as IpcResult<VaultProject>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to update project');
+    const result = await invoke<IpcResult<VaultProject>>("update_project", { id, data });
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to update project");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to update project: ${errorMessage(err)}`);
@@ -88,8 +88,8 @@ export async function updateProject(
 
 export async function deleteProject(id: string): Promise<void> {
   try {
-    const result = (await getApi().deleteProject(id) as unknown) as IpcResult<never>;
-    if (!result.success) throw new Error(result.error ?? 'Failed to delete project');
+    const result = await invoke<{ success: boolean; error?: string }>("delete_project", { id });
+    if (!result.success) throw new Error(result.error ?? "Failed to delete project");
   } catch (err) {
     throw new Error(`Failed to delete project: ${errorMessage(err)}`);
   }
@@ -97,8 +97,8 @@ export async function deleteProject(id: string): Promise<void> {
 
 export async function toggleFavorite(id: string): Promise<VaultProject> {
   try {
-    const result = (await getApi().toggleFavorite(id) as unknown) as IpcResult<VaultProject>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to toggle favorite');
+    const result = await invoke<IpcResult<VaultProject>>("toggle_favorite", { id });
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to toggle favorite");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to toggle favorite: ${errorMessage(err)}`);
@@ -113,8 +113,12 @@ export async function addVariable(
   variable: Partial<EnvVariable>,
 ): Promise<EnvVariable> {
   try {
-    const result = (await getApi().addVariable(projectId, envId, variable) as unknown) as IpcResult<EnvVariable>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to add variable');
+    const result = await invoke<IpcResult<EnvVariable>>("add_variable", {
+      projectId,
+      envId,
+      variable,
+    });
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to add variable");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to add variable: ${errorMessage(err)}`);
@@ -128,8 +132,13 @@ export async function updateVariable(
   data: Partial<EnvVariable>,
 ): Promise<EnvVariable> {
   try {
-    const result = (await getApi().updateVariable(projectId, envId, varId, data) as unknown) as IpcResult<EnvVariable>;
-    if (!result.success || !result.data) throw new Error(result.error ?? 'Failed to update variable');
+    const result = await invoke<IpcResult<EnvVariable>>("update_variable", {
+      projectId,
+      envId,
+      varId,
+      data,
+    });
+    if (!result.success || !result.data) throw new Error(result.error ?? "Failed to update variable");
     return result.data;
   } catch (err) {
     throw new Error(`Failed to update variable: ${errorMessage(err)}`);
@@ -142,8 +151,12 @@ export async function deleteVariable(
   varId: string,
 ): Promise<void> {
   try {
-    const result = (await getApi().deleteVariable(projectId, envId, varId) as unknown) as IpcResult<never>;
-    if (!result.success) throw new Error(result.error ?? 'Failed to delete variable');
+    const result = await invoke<{ success: boolean; error?: string }>("delete_variable", {
+      projectId,
+      envId,
+      varId,
+    });
+    if (!result.success) throw new Error(result.error ?? "Failed to delete variable");
   } catch (err) {
     throw new Error(`Failed to delete variable: ${errorMessage(err)}`);
   }
@@ -156,7 +169,17 @@ export async function exportEnv(
   envId: string,
 ): Promise<{ success: boolean; path?: string }> {
   try {
-    return await getApi().exportEnv(projectId, envId);
+    const result = await invoke<{ success: boolean; filePath?: string; error?: string }>(
+      "export_env",
+      { projectId, envId },
+    );
+    if (!result.success) {
+      if (result.error === "Export cancelled") {
+        return { success: false };
+      }
+      throw new Error(result.error ?? "Failed to export .env file");
+    }
+    return { success: true, path: result.filePath };
   } catch (err) {
     throw new Error(`Failed to export .env file: ${errorMessage(err)}`);
   }
@@ -167,7 +190,17 @@ export async function importEnv(
   envId: string,
 ): Promise<{ success: boolean; count?: number }> {
   try {
-    return await getApi().importEnv(projectId, envId);
+    const result = await invoke<{ success: boolean; count?: number; error?: string }>("import_env", {
+      projectId,
+      envId,
+    });
+    if (!result.success) {
+      if (result.error === "Import cancelled") {
+        return { success: false };
+      }
+      throw new Error(result.error ?? "Failed to import .env file");
+    }
+    return result;
   } catch (err) {
     throw new Error(`Failed to import .env file: ${errorMessage(err)}`);
   }
@@ -177,7 +210,10 @@ export async function importEnv(
 
 export async function copySecret(value: string): Promise<void> {
   try {
-    await getApi().copySecret(value);
+    const result = await invoke<{ success: boolean; error?: string }>("copy_secret", { value });
+    if (!result.success) {
+      throw new Error(result.error ?? "Failed to copy to clipboard");
+    }
   } catch (err) {
     throw new Error(`Failed to copy to clipboard: ${errorMessage(err)}`);
   }
@@ -186,22 +222,36 @@ export async function copySecret(value: string): Promise<void> {
 // ── Window Controls ────────────────────────────────────────────────────────
 
 export function minimize(): void {
-  getApi().minimize();
+  getCurrentWindow().minimize().catch(console.error);
 }
 
 export function maximize(): void {
-  getApi().maximize();
+  getCurrentWindow()
+    .isMaximized()
+    .then((maximized) => {
+      if (maximized) {
+        getCurrentWindow().unmaximize();
+      } else {
+        getCurrentWindow().maximize();
+      }
+    })
+    .catch(console.error);
 }
 
 export function close(): void {
-  getApi().close();
+  getCurrentWindow().close().catch(console.error);
 }
 
 // ── Platform ───────────────────────────────────────────────────────────────
 
 export async function getPlatform(): Promise<string> {
   try {
-    return await getApi().getPlatform();
+    // tauri-plugin-os returns values like 'macos', 'linux', 'windows'
+    // Map to match the original Electron values: 'darwin', 'linux', 'win32'
+    const osType = await type();
+    if (osType === "macos") return "darwin";
+    if (osType === "windows") return "win32";
+    return osType;
   } catch (err) {
     throw new Error(`Failed to get platform: ${errorMessage(err)}`);
   }
@@ -210,7 +260,18 @@ export async function getPlatform(): Promise<string> {
 // ── Vault Changed Listener ─────────────────────────────────────────────────
 
 export function onVaultChanged(callback: () => void): () => void {
-  return getApi().onVaultChanged(callback);
+  // Use Tauri's event system instead of Electron IPC channel.
+  // `listen` returns a Promise<UnlistenFn>; we hold the unlisten fn in a
+  // closure so the caller can clean up synchronously.
+  let unlisten: (() => void) | null = null;
+
+  listen("vault-changed", callback).then((fn) => {
+    unlisten = fn;
+  });
+
+  return () => {
+    if (unlisten) unlisten();
+  };
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────

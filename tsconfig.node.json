@@ -15,9 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@electron/*": ["electron/*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": ["electron", "vite.config.ts"]
+  "include": ["vite.config.ts"]
 }

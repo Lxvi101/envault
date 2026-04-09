@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import * as api from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -63,7 +64,7 @@ export function VaultItemDetail({ project, onEdit }: VaultItemDetailProps) {
   const handleAddVariable = useCallback(
     async (data: Partial<EnvVariable>) => {
       try {
-        await window.api.addVariable(project.id, selectedEnvId, data);
+        await api.addVariable(project.id, selectedEnvId, data);
         await useVaultStore.getState().refreshProjects();
         addToast("success", `Added ${data.key}`);
       } catch {
@@ -76,7 +77,7 @@ export function VaultItemDetail({ project, onEdit }: VaultItemDetailProps) {
   const handleUpdateVariable = useCallback(
     async (varId: string, data: Partial<EnvVariable>) => {
       try {
-        await window.api.updateVariable(project.id, selectedEnvId, varId, data);
+        await api.updateVariable(project.id, selectedEnvId, varId, data);
         await useVaultStore.getState().refreshProjects();
         addToast("success", "Variable updated");
       } catch {
@@ -89,7 +90,7 @@ export function VaultItemDetail({ project, onEdit }: VaultItemDetailProps) {
   const handleDeleteVariable = useCallback(
     async (varId: string) => {
       try {
-        await window.api.deleteVariable(project.id, selectedEnvId, varId);
+        await api.deleteVariable(project.id, selectedEnvId, varId);
         await useVaultStore.getState().refreshProjects();
         addToast("info", "Variable deleted");
       } catch {
@@ -101,7 +102,7 @@ export function VaultItemDetail({ project, onEdit }: VaultItemDetailProps) {
 
   const handleExport = useCallback(async () => {
     try {
-      const result = await window.api.exportEnv(project.id, selectedEnvId);
+      const result = await api.exportEnv(project.id, selectedEnvId);
       if (result.success) {
         addToast("success", `Exported to ${result.path}`);
       }
@@ -112,7 +113,7 @@ export function VaultItemDetail({ project, onEdit }: VaultItemDetailProps) {
 
   const handleImport = useCallback(async () => {
     try {
-      const result = await window.api.importEnv(project.id, selectedEnvId);
+      const result = await api.importEnv(project.id, selectedEnvId);
       if (result.success) {
         await useVaultStore.getState().refreshProjects();
         addToast("success", `Imported ${result.count} variables`);

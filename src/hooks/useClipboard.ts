@@ -1,9 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { CLIPBOARD_CLEAR_MS } from "../lib/constants";
 import { useToastStore } from "../stores/useToastStore";
+import * as api from "../lib/api";
 
 interface UseClipboardResult {
-  /** Copy a value to the clipboard via the secure Electron IPC bridge */
+  /** Copy a value to the clipboard via the Tauri backend. */
   copy: (value: string, label?: string) => Promise<void>;
   /** Whether a copy operation is in flight */
   isCopying: boolean;
@@ -12,11 +13,12 @@ interface UseClipboardResult {
 }
 
 /**
- * Clipboard hook that uses the Electron preload bridge to copy secrets.
+ * Clipboard hook that uses the Tauri backend to copy secrets securely.
  *
  * - Shows a success toast on copy
  * - Tracks `hasCopied` state that auto-resets after CLIPBOARD_CLEAR_MS
  * - Errors are surfaced as error toasts
+ * - The Rust backend handles the 30-second auto-clear
  */
 export function useClipboard(): UseClipboardResult {
   const [isCopying, setIsCopying] = useState(false);
@@ -27,12 +29,13 @@ export function useClipboard(): UseClipboardResult {
     setIsCopying(true);
 
     try {
-      await window.api.copySecret(value);
+      await api.copySecret(value);
 
       setHasCopied(true);
       useToastStore.getState().addToast("success", label ? `Copied ${label}` : "Copied to clipboard");
 
-      // Reset hasCopied after the clear timeout
+      // Reset hasCopied indicator after the clear timeout (UI state only;
+      // actual clipboard clearing is handled in the Rust backend)
       if (clearTimerRef.current) {
         clearTimeout(clearTimerRef.current);
       }
