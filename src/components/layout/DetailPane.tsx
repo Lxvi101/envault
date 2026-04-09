@@ -273,11 +273,12 @@ function FieldRow({ variable, onEdit, onDelete, isEditing, existingKeys, onSave,
             </p>
             <p
               className={clsx(
-                'text-[14px] font-mono',
+                'text-[14px] font-mono truncate',
                 variable.isSecret && !revealed
                   ? 'text-vault-text/60 tracking-[0.2em]'
                   : 'text-vault-text',
               )}
+              title={variable.isSecret && !revealed ? undefined : variable.value}
             >
               {displayValue}
             </p>
@@ -418,7 +419,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Tab bar */}
-      <div className="flex items-center gap-0.5 px-6 pt-3 pb-0 border-b border-vault-border shrink-0">
+      <div className="flex items-center gap-0.5 px-6 pt-3 pb-0 border-b border-vault-border shrink-0 overflow-x-auto scrollbar-none">
         {environments.map((env) => {
           const isActive = env.id === activeEnvId;
           return (
@@ -426,7 +427,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
               key={env.id}
               onClick={() => setActiveEnvId(env.id)}
               className={clsx(
-                'relative px-3 pb-2.5 pt-1 text-[13px] font-medium transition-colors duration-75',
+                'relative px-3 pb-2.5 pt-1 text-[13px] font-medium transition-colors duration-75 shrink-0 whitespace-nowrap',
                 isActive ? 'text-vault-accent' : 'text-vault-muted hover:text-vault-text',
               )}
             >
@@ -627,8 +628,8 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
   return (
     <div className="h-full flex flex-col animate-fade-in">
       {/* Top bar with breadcrumb and actions */}
-      <div className="flex items-center justify-between px-6 py-2.5 border-b border-vault-border shrink-0">
-        <div className="flex items-center gap-2 text-[13px]">
+      <div className="flex items-center justify-between px-6 py-2.5 border-b border-vault-border shrink-0 min-w-0">
+        <div className="flex items-center gap-2 text-[13px] min-w-0 truncate">
           <span className="text-vault-muted flex items-center gap-1.5">
             <div className="w-5 h-5 rounded-full bg-vault-accent/10 flex items-center justify-center">
               <FolderOpen size={11} className="text-vault-accent" strokeWidth={2} />
@@ -668,7 +669,7 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
             )}
           </div>
 
-          <h1 className="text-[22px] font-bold text-vault-text mb-1">
+          <h1 className="text-[22px] font-bold text-vault-text mb-1 truncate max-w-full">
             {project.name}
           </h1>
 
@@ -709,7 +710,7 @@ function ProjectDetail({ project, onEdit }: ProjectDetailProps) {
           )}
         </div>
 
-        <div className="flex items-center justify-center gap-2 mt-3">
+        <div className="flex items-center justify-center gap-2 mt-3 flex-wrap">
           <button
             onClick={onEdit}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium bg-vault-surface border border-vault-border text-vault-text hover:bg-vault-raised transition-colors"

@@ -176,7 +176,7 @@ export function Sidebar() {
     <div
       style={{ width: sidebarWidth }}
       className={clsx(
-        'h-full flex flex-col shrink-0 select-none',
+        'h-full flex flex-col shrink-0 min-w-0 select-none',
         'bg-vault-sidebar',
         'border-r border-vault-border',
       )}

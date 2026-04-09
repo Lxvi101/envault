@@ -2,6 +2,10 @@ import { create } from "zustand";
 import {
   DEFAULT_LIST_WIDTH,
   DEFAULT_SIDEBAR_WIDTH,
+  MIN_SIDEBAR_WIDTH,
+  MAX_SIDEBAR_WIDTH,
+  MIN_LIST_WIDTH,
+  MAX_LIST_WIDTH,
   UI_PREFS_KEY,
 } from "../lib/constants";
 import type { ProjectCategory } from "../types/vault";
@@ -67,13 +71,15 @@ export const useUIStore = create<UIState>((set, get) => ({
   sidebarCollapsed: persisted.sidebarCollapsed ?? false,
 
   setSidebarWidth: (width) => {
-    set({ sidebarWidth: width });
-    persistState({ ...get(), sidebarWidth: width });
+    const clamped = Math.min(MAX_SIDEBAR_WIDTH, Math.max(MIN_SIDEBAR_WIDTH, width));
+    set({ sidebarWidth: clamped });
+    persistState({ ...get(), sidebarWidth: clamped });
   },
 
   setListWidth: (width) => {
-    set({ listWidth: width });
-    persistState({ ...get(), listWidth: width });
+    const clamped = Math.min(MAX_LIST_WIDTH, Math.max(MIN_LIST_WIDTH, width));
+    set({ listWidth: clamped });
+    persistState({ ...get(), listWidth: clamped });
   },
 
   setActiveCategory: (category) => {

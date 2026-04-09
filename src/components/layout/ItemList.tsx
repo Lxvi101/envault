@@ -282,7 +282,7 @@ export function ItemList({ onNewProject, onEditProject }: ItemListProps) {
   return (
     <div
       style={{ width: listWidth }}
-      className="h-full flex flex-col shrink-0 bg-white border-r border-vault-border"
+      className="h-full flex flex-col shrink-0 min-w-0 bg-white border-r border-vault-border"
     >
       {/* Header */}
       <div className="px-4 pt-3 pb-2 space-y-2 shrink-0 border-b border-vault-border">
