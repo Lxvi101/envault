@@ -7,11 +7,14 @@ interface AuthState {
   isLocked: boolean;
   isFirstRun: boolean;
   isLoading: boolean;
+  yoloMode: boolean;
   error: string | null;
   checkAuth: () => Promise<void>;
   unlock: (password: string) => Promise<boolean>;
   lock: () => Promise<void>;
   setup: (password: string) => Promise<boolean>;
+  enableYolo: (password: string) => Promise<boolean>;
+  disableYolo: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -19,15 +22,23 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLocked: true,
   isFirstRun: false,
   isLoading: true,
+  yoloMode: false,
   error: null,
 
   checkAuth: async () => {
     set({ isLoading: true, error: null });
     try {
       const result = await api.checkAuth();
+
+      // If YOLO auto-unlocked, populate vault store with projects
+      if (!result.isLocked && result.projects) {
+        useVaultStore.getState().setProjects(result.projects);
+      }
+
       set({
         isLocked: result.isLocked,
         isFirstRun: result.isFirstRun,
+        yoloMode: result.yoloMode,
         isLoading: false,
       });
     } catch (err) {
@@ -97,6 +108,28 @@ export const useAuthStore = create<AuthState>((set) => ({
         error: err instanceof Error ? err.message : "Failed to set up vault",
       });
       return false;
+    }
+  },
+
+  enableYolo: async (password: string) => {
+    try {
+      const result = await api.enableYoloMode(password);
+      if (result.success) {
+        set({ yoloMode: true });
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  },
+
+  disableYolo: async () => {
+    try {
+      await api.disableYoloMode();
+      set({ yoloMode: false });
+    } catch {
+      // best effort
     }
   },
 

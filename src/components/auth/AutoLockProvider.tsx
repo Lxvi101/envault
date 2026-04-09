@@ -7,11 +7,11 @@ interface AutoLockProviderProps {
 }
 
 export function AutoLockProvider({ children }: AutoLockProviderProps) {
-  const { lock, isLocked, isFirstRun } = useAuthStore();
+  const { lock, isLocked, isFirstRun, yoloMode } = useAuthStore();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetTimer = useCallback(() => {
-    if (isLocked || isFirstRun) return;
+    if (isLocked || isFirstRun || yoloMode) return;
 
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -20,10 +20,10 @@ export function AutoLockProvider({ children }: AutoLockProviderProps) {
     timerRef.current = setTimeout(() => {
       lock();
     }, AUTO_LOCK_MS);
-  }, [lock, isLocked, isFirstRun]);
+  }, [lock, isLocked, isFirstRun, yoloMode]);
 
   useEffect(() => {
-    if (isLocked || isFirstRun) {
+    if (isLocked || isFirstRun || yoloMode) {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
@@ -53,7 +53,7 @@ export function AutoLockProvider({ children }: AutoLockProviderProps) {
         clearTimeout(timerRef.current);
       }
     };
-  }, [isLocked, isFirstRun, resetTimer]);
+  }, [isLocked, isFirstRun, yoloMode, resetTimer]);
 
   return <>{children}</>;
 }

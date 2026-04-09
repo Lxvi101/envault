@@ -1,19 +1,31 @@
-use super::{storage::vault_exists, vault::VaultProject};
+use super::{storage::vault_exists, vault::VaultProject, yolo};
 use crate::state::AppState;
 use std::sync::MutexGuard;
 
 pub struct AuthState {
     pub is_locked: bool,
     pub is_first_run: bool,
+    pub yolo_mode: bool,
 }
 
 pub fn check_auth(state: &mut MutexGuard<AppState>) -> AuthState {
     let exists = vault_exists();
-    let is_unlocked = state.vault.is_unlocked();
+    let mut is_unlocked = state.vault.is_unlocked();
+    let yolo_enabled = yolo::is_yolo_enabled();
+
+    // Auto-unlock if YOLO mode is on and vault exists but is locked
+    if !is_unlocked && exists && yolo_enabled {
+        if let Some(password) = yolo::get_yolo_password() {
+            if state.vault.unlock(&password).is_ok() {
+                is_unlocked = true;
+            }
+        }
+    }
 
     AuthState {
         is_locked: !is_unlocked,
         is_first_run: !exists,
+        yolo_mode: yolo_enabled,
     }
 }
 

@@ -15,9 +15,9 @@ import type { EnvVariable, VaultProject } from "../types/vault";
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 
-export async function checkAuth(): Promise<{ isLocked: boolean; isFirstRun: boolean }> {
+export async function checkAuth(): Promise<{ isLocked: boolean; isFirstRun: boolean; yoloMode: boolean; projects?: VaultProject[] }> {
   try {
-    return await invoke<{ isLocked: boolean; isFirstRun: boolean }>("check_auth");
+    return await invoke<{ isLocked: boolean; isFirstRun: boolean; yoloMode: boolean; projects?: VaultProject[] }>("check_auth");
   } catch (err) {
     throw new Error(`Failed to check auth status: ${errorMessage(err)}`);
   }
@@ -46,6 +46,24 @@ export async function setup(password: string): Promise<{ success: boolean; proje
     return await invoke<{ success: boolean; projects?: VaultProject[] }>("setup", { password });
   } catch (err) {
     throw new Error(`Failed to set up vault: ${errorMessage(err)}`);
+  }
+}
+
+// ── YOLO Mode ─────────────────────────────────────────────────────────────
+
+export async function enableYoloMode(password: string): Promise<{ success: boolean; enabled: boolean; error?: string }> {
+  try {
+    return await invoke<{ success: boolean; enabled: boolean; error?: string }>("enable_yolo_mode", { password });
+  } catch (err) {
+    throw new Error(`Failed to enable YOLO mode: ${errorMessage(err)}`);
+  }
+}
+
+export async function disableYoloMode(): Promise<{ success: boolean; enabled: boolean; error?: string }> {
+  try {
+    return await invoke<{ success: boolean; enabled: boolean; error?: string }>("disable_yolo_mode");
+  } catch (err) {
+    throw new Error(`Failed to disable YOLO mode: ${errorMessage(err)}`);
   }
 }
 

@@ -24,6 +24,8 @@ pub fn run() {
             auth::unlock,
             auth::lock,
             auth::setup,
+            auth::enable_yolo_mode,
+            auth::disable_yolo_mode,
             // Vault - Projects
             vault::get_all_projects,
             vault::create_project,

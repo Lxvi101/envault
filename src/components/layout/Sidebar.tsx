@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import {
   Star,
   Layers,
@@ -13,6 +13,7 @@ import {
   Lock,
   Tag,
   Plus,
+  Zap,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useUIStore } from '@/stores/useUIStore';
@@ -110,7 +111,31 @@ function SectionHeader({ label, action }: { label: string; action?: () => void }
 export function Sidebar() {
   const { sidebarWidth, activeCategory: activeView, activeTag, setActiveCategory: setActiveView, setActiveTag } = useUIStore();
   const { projects } = useVaultStore();
-  const { lock } = useAuthStore();
+  const { lock, yoloMode, enableYolo, disableYolo } = useAuthStore();
+  const [showYoloPrompt, setShowYoloPrompt] = useState(false);
+  const [yoloPassword, setYoloPassword] = useState('');
+  const [yoloError, setYoloError] = useState('');
+
+  const handleYoloToggle = useCallback(async () => {
+    if (yoloMode) {
+      await disableYolo();
+    } else {
+      setShowYoloPrompt(true);
+      setYoloPassword('');
+      setYoloError('');
+    }
+  }, [yoloMode, disableYolo]);
+
+  const handleYoloSubmit = useCallback(async () => {
+    if (!yoloPassword) return;
+    const success = await enableYolo(yoloPassword);
+    if (success) {
+      setShowYoloPrompt(false);
+      setYoloPassword('');
+    } else {
+      setYoloError('Invalid password');
+    }
+  }, [yoloPassword, enableYolo]);
 
   const favoritesCount = useMemo(
     () => projects.filter((p) => p.isFavorite).length,
@@ -228,19 +253,82 @@ export function Sidebar() {
         )}
       </nav>
 
-      {/* Bottom lock button */}
-      <div className="px-2 py-2 border-t border-vault-border shrink-0">
+      {/* Bottom actions */}
+      <div className="px-2 py-2 border-t border-vault-border shrink-0 space-y-1">
+        {/* YOLO mode toggle */}
         <button
-          onClick={lock}
+          onClick={handleYoloToggle}
           className={clsx(
             'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] font-medium',
-            'text-vault-muted hover:text-vault-text hover:bg-black/[0.04]',
             'transition-colors duration-100',
+            yoloMode
+              ? 'text-amber-600 bg-amber-50 hover:bg-amber-100'
+              : 'text-vault-muted hover:text-vault-text hover:bg-black/[0.04]',
           )}
         >
-          <Lock size={14} strokeWidth={1.75} />
-          <span>Lock Vault</span>
+          <Zap size={14} strokeWidth={1.75} className={yoloMode ? 'fill-amber-500' : ''} />
+          <span>YOLO Mode</span>
+          <span
+            className={clsx(
+              'ml-auto text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded',
+              yoloMode ? 'bg-amber-200 text-amber-800' : 'bg-vault-surface text-vault-muted',
+            )}
+          >
+            {yoloMode ? 'ON' : 'OFF'}
+          </span>
         </button>
+
+        {/* YOLO password prompt */}
+        {showYoloPrompt && (
+          <div className="px-2 py-2 bg-vault-surface rounded-lg border border-vault-border space-y-2">
+            <p className="text-[11px] text-vault-muted">Enter master password to enable YOLO mode (skips lock screen):</p>
+            <input
+              type="password"
+              value={yoloPassword}
+              onChange={(e) => { setYoloPassword(e.target.value); setYoloError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleYoloSubmit()}
+              placeholder="Master password"
+              autoFocus
+              className={clsx(
+                'w-full px-2.5 py-1.5 text-[12px] rounded-md',
+                'bg-white border border-vault-border',
+                'focus:outline-none focus:ring-1 focus:ring-vault-accent',
+                yoloError && 'border-vault-danger',
+              )}
+            />
+            {yoloError && <p className="text-[11px] text-vault-danger">{yoloError}</p>}
+            <div className="flex gap-1.5">
+              <button
+                onClick={() => setShowYoloPrompt(false)}
+                className="flex-1 py-1 text-[11px] rounded-md bg-vault-surface border border-vault-border text-vault-muted hover:text-vault-text"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleYoloSubmit}
+                disabled={!yoloPassword}
+                className="flex-1 py-1 text-[11px] rounded-md bg-amber-500 text-white font-medium hover:bg-amber-600 disabled:opacity-50"
+              >
+                Enable
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Lock button (hidden in YOLO mode) */}
+        {!yoloMode && (
+          <button
+            onClick={lock}
+            className={clsx(
+              'w-full flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[13px] font-medium',
+              'text-vault-muted hover:text-vault-text hover:bg-black/[0.04]',
+              'transition-colors duration-100',
+            )}
+          >
+            <Lock size={14} strokeWidth={1.75} />
+            <span>Lock Vault</span>
+          </button>
+        )}
       </div>
     </div>
   );
