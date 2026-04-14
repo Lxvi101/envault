@@ -37,6 +37,7 @@ export function TitleBar({ onNewItem }: TitleBarProps) {
 
   return (
     <div
+      data-tauri-drag-region
       className={clsx(
         'h-12 flex items-center shrink-0 select-none',
         isMac && 'pl-[78px]',

@@ -15,6 +15,7 @@ import {
   FolderOpen,
   KeyRound,
   X,
+  ClipboardPaste,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useVaultStore } from '@/stores/useVaultStore';
@@ -25,6 +26,7 @@ import { ContextMenu, type ContextMenuItem } from '@/components/shared/ContextMe
 import { DeleteConfirm } from '@/components/vault/DeleteConfirm';
 import type { VaultProject, Environment, EnvVariable } from '@/types/vault';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '@/types/vault';
+import { BulkPasteModal } from '@/components/vault/BulkPasteModal';
 
 // ─── Empty state ─────────────────────────────────────────────────────────────
 
@@ -341,6 +343,7 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
   const [activeEnvId, setActiveEnvId] = useState<string>(environments[0]?.id ?? '');
   const [editingVariableId, setEditingVariableId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isBulkPasteOpen, setIsBulkPasteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<EnvVariable | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -404,6 +407,30 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
       setIsDeleting(false);
     }
   }, [activeEnv, deleteTarget, projectId, deleteVariable, addToast]);
+
+  const handleBulkImport = useCallback(
+    async (entries: { key: string; value: string }[]) => {
+      if (!activeEnv) return;
+      let added = 0;
+      for (const entry of entries) {
+        try {
+          await addVariable(projectId, activeEnv.id, {
+            key: entry.key,
+            value: entry.value,
+            description: '',
+            isSecret: false,
+          });
+          added++;
+        } catch {
+          // skip individual failures
+        }
+      }
+      if (added > 0) {
+        addToast('success', `Imported ${added} variable${added === 1 ? '' : 's'}`);
+      }
+    },
+    [activeEnv, projectId, addVariable, addToast],
+  );
 
   if (environments.length === 0) {
     return (
@@ -502,11 +529,11 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
                 onCancel={() => setIsAdding(false)}
               />
             ) : (
-              <div className="px-6 py-4">
+              <div className="px-6 py-4 flex gap-2">
                 <button
                   onClick={() => { setIsAdding(true); setEditingVariableId(null); }}
                   className={clsx(
-                    'w-full flex items-center justify-center gap-2 py-2.5 rounded-lg',
+                    'flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg',
                     'border border-dashed border-vault-border',
                     'text-[13px] text-vault-muted hover:text-vault-accent',
                     'hover:border-vault-accent/40 hover:bg-vault-accent/5',
@@ -515,6 +542,20 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
                 >
                   <Plus size={14} strokeWidth={2} />
                   Add Variable
+                </button>
+                <button
+                  onClick={() => setIsBulkPasteOpen(true)}
+                  className={clsx(
+                    'flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg',
+                    'border border-dashed border-vault-border',
+                    'text-[13px] text-vault-muted hover:text-vault-accent',
+                    'hover:border-vault-accent/40 hover:bg-vault-accent/5',
+                    'transition-all duration-100',
+                  )}
+                  title="Paste .env content"
+                >
+                  <ClipboardPaste size={14} strokeWidth={2} />
+                  Paste .env
                 </button>
               </div>
             )}
@@ -531,17 +572,30 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
               <KeyRound size={20} className="text-vault-muted" strokeWidth={1.5} />
             </div>
             <p className="text-[13px] text-vault-muted mb-4">No variables yet</p>
-            <button
-              onClick={() => setIsAdding(true)}
-              className={clsx(
-                'flex items-center gap-2 px-4 py-2 rounded-lg',
-                'bg-vault-accent text-white text-[13px] font-medium',
-                'hover:bg-vault-accent-hover transition-colors',
-              )}
-            >
-              <Plus size={14} strokeWidth={2} />
-              Add first variable
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsAdding(true)}
+                className={clsx(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg',
+                  'bg-vault-accent text-white text-[13px] font-medium',
+                  'hover:bg-vault-accent-hover transition-colors',
+                )}
+              >
+                <Plus size={14} strokeWidth={2} />
+                Add first variable
+              </button>
+              <button
+                onClick={() => setIsBulkPasteOpen(true)}
+                className={clsx(
+                  'flex items-center gap-2 px-4 py-2 rounded-lg',
+                  'bg-vault-surface border border-vault-border text-[13px] font-medium text-vault-text',
+                  'hover:bg-vault-raised transition-colors',
+                )}
+              >
+                <ClipboardPaste size={14} strokeWidth={2} />
+                Paste .env
+              </button>
+            </div>
           </div>
         )}
 
@@ -568,6 +622,14 @@ function EnvSection({ environments, projectId }: EnvSectionProps) {
         isLoading={isDeleting}
         title="Delete Variable"
         description={`Are you sure you want to delete "${deleteTarget?.key}"? This action cannot be undone.`}
+      />
+
+      {/* Bulk paste modal */}
+      <BulkPasteModal
+        isOpen={isBulkPasteOpen}
+        onClose={() => setIsBulkPasteOpen(false)}
+        onImport={handleBulkImport}
+        existingKeys={existingKeys}
       />
     </div>
   );

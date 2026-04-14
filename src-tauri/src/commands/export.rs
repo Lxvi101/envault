@@ -82,13 +82,15 @@ pub async fn import_env(
     app: AppHandle,
     state: State<'_, VaultState>,
 ) -> Result<ImportResult, String> {
-    // Show an open dialog
+    // Show an open dialog – "All Files" is the default so dotfiles like .env
+    // and files without an extension are always selectable.
     let open_path = app
         .dialog()
         .file()
         .set_title("Import Environment Variables")
-        .add_filter("Environment Files", &["env", "env.local", "env.development", "env.production", "env.staging"])
         .add_filter("All Files", &["*"])
+        .add_filter("Environment Files", &["env"])
+        .add_filter("Text Files", &["txt", "md"])
         .blocking_pick_file();
 
     let file_path = match open_path {
